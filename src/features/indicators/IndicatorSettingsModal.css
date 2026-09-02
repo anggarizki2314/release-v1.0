@@ -1,0 +1,476 @@
+/* ─────────────────────────────────────────────────────────────────────
+   TradingView-Style Indicator Settings Modal
+   ───────────────────────────────────────────────────────────────────── */
+
+.tv-settings-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  pointer-events: auto !important;
+  animation: tv-fade 0.12s ease-out;
+}
+
+@keyframes tv-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.tv-settings-modal {
+  width: 92%;
+  max-width: 470px;
+  background: #1e222d;
+  border: 1px solid #2a2e39;
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif;
+  user-select: none;
+  pointer-events: auto !important;
+  animation: tv-scale 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tv-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Header ── */
+.tv-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+}
+
+.tv-settings-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.tv-settings-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.tv-settings-close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Navigation Tabs ── */
+.tv-settings-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px;
+  border-bottom: 1px solid #2a2e39;
+}
+
+.tv-nav-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 0 10px;
+  color: #787b86;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease;
+  position: relative;
+}
+
+.tv-nav-tab:hover {
+  color: #d1d4dc;
+}
+
+.tv-nav-tab.is-active {
+  color: #ffffff;
+  border-bottom-color: #ffffff;
+}
+
+/* ── Body Form ── */
+.tv-settings-body {
+  padding: 18px 20px;
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.tv-tab-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tv-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #787b86;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+
+.tv-form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+}
+
+.tv-row-label {
+  font-size: 13.5px;
+  color: #d1d4dc;
+  font-weight: 400;
+}
+
+.tv-input-num {
+  width: 90px;
+  height: 32px;
+  background: #131722;
+  border: 1px solid #363a45;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 13.5px;
+  padding: 0 10px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.tv-input-num:focus {
+  border-color: #2962ff;
+}
+
+.tv-input-num.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tv-select {
+  min-width: 140px;
+  height: 32px;
+  background: #131722;
+  border: 1px solid #363a45;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 13px;
+  padding: 0 10px;
+  outline: none;
+  cursor: pointer;
+}
+
+.tv-select:focus {
+  border-color: #2962ff;
+}
+
+/* ── Split Row (Daye Quarters 2-Column Inputs) ── */
+.tv-split-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+}
+
+.tv-inline-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tv-select-compact {
+  min-width: 100px;
+  height: 30px;
+  font-size: 12px;
+}
+
+.tv-input-compact {
+  width: 60px;
+  height: 30px;
+  font-size: 12.5px;
+}
+
+.tv-quarters-border-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.tv-color-box-solid {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #434651;
+  border-radius: 3px;
+  background: #000000;
+  cursor: pointer;
+}
+
+.tv-quarters-palette-grid {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.tv-quarter-color-slot {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid #434651;
+  background: #131722;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.tv-quarter-checker-box {
+  width: 100%;
+  height: 100%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ── Checkbox Row ── */
+.tv-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tv-checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  position: relative;
+}
+
+.tv-checkbox-container input[type='checkbox'] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.tv-checkbox-custom {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #434651;
+  border-radius: 3px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+
+.tv-checkbox-container:hover .tv-checkbox-custom {
+  border-color: #787b86;
+}
+
+.tv-checkbox-container input[type='checkbox']:checked ~ .tv-checkbox-custom {
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.tv-checkbox-container input[type='checkbox']:checked ~ .tv-checkbox-custom::after {
+  content: '';
+  width: 4px;
+  height: 8px;
+  border: solid #131722;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+.tv-checkbox-text {
+  font-size: 13.5px;
+  color: #d1d4dc;
+}
+
+.tv-info-icon {
+  color: #787b86;
+  cursor: help;
+  display: flex;
+  align-items: center;
+  transition: color 0.12s ease;
+}
+
+.tv-info-icon:hover {
+  color: #d1d4dc;
+}
+
+/* ── Style Tab Rows ── */
+.tv-style-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+
+.tv-color-box {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #363a45;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tv-line-width-select {
+  height: 28px;
+  background: #131722;
+  border: 1px solid #363a45;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 12px;
+  padding: 0 6px;
+  outline: none;
+}
+
+.tv-level-num {
+  width: 60px;
+  height: 28px;
+}
+
+.tv-style-label {
+  font-size: 13.5px;
+  color: #d1d4dc;
+}
+
+/* ── Footer ── */
+.tv-settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid #2a2e39;
+  background: #1e222d;
+}
+
+.tv-default-dropdown-wrapper {
+  position: relative;
+}
+
+.tv-btn-default {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  background: #1e222d;
+  border: 1px solid #434651;
+  border-radius: 4px;
+  color: #d1d4dc;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.tv-btn-default:hover {
+  background: #2a2e39;
+  border-color: #787b86;
+}
+
+.tv-default-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 4px;
+  background: #1e222d;
+  border: 1px solid #363a45;
+  border-radius: 4px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  padding: 4px 0;
+  z-index: 100;
+  min-width: 140px;
+}
+
+.tv-default-menu button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  color: #d1d4dc;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.tv-default-menu button:hover {
+  background: #2962ff;
+  color: #ffffff;
+}
+
+.tv-footer-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tv-btn-cancel {
+  height: 32px;
+  padding: 0 18px;
+  background: #2a2e39;
+  border: 1px solid #434651;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.tv-btn-cancel:hover {
+  background: #363a45;
+}
+
+.tv-btn-ok {
+  height: 32px;
+  padding: 0 20px;
+  background: #ffffff;
+  border: none;
+  border-radius: 4px;
+  color: #131722;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.tv-btn-ok:hover {
+  background: #e0e3eb;
+}

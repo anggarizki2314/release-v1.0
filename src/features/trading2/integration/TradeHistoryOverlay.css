@@ -1,0 +1,105 @@
+/* TradeHistoryOverlay CSS */
+
+.te2-trade-history-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 38;
+  user-select: none;
+}
+
+.te2-trade-history-group {
+  transition: opacity 0.15s ease;
+}
+
+.te2-trade-history-group:hover .te2-trade-history-line {
+  stroke-width: 2.2px;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+
+.te2-trade-history-group:hover .te2-trade-arrow {
+  transform: scale(1.15);
+  transform-origin: center;
+}
+
+.te2-trade-arrow {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.te2-trade-history-line {
+  opacity: 0.85;
+  transition: stroke-width 0.15s ease;
+}
+
+/* Floating Hover Tooltip */
+.te2-trade-tooltip {
+  position: absolute;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 50;
+  min-width: 170px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', Roboto, sans-serif;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.te2-tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 3px;
+}
+
+.te2-tooltip-dir.buy {
+  color: #60a5fa;
+}
+
+.te2-tooltip-dir.sell {
+  color: #f87171;
+}
+
+.te2-tooltip-vol {
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.te2-tooltip-pnl.profit {
+  color: #34d399;
+}
+
+.te2-tooltip-pnl.loss {
+  color: #f87171;
+}
+
+.te2-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #cbd5e1;
+}
+
+.te2-tooltip-row strong {
+  color: #ffffff;
+}
+
+.te2-tooltip-footer {
+  font-size: 9px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}

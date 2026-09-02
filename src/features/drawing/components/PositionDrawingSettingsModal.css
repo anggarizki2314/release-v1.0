@@ -1,0 +1,377 @@
+/* ─── Position Drawing Settings Modal (TradingView Pixel Perfect) ─── */
+
+.tv-position-modal {
+  width: 420px;
+  max-width: 95vw;
+  max-height: 90vh;
+  background: #1e222d;
+  border: 1px solid #2a2e39;
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+}
+
+.tv-position-body {
+  padding: 16px 20px;
+  max-height: calc(90vh - 120px);
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+.tv-position-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.tv-position-body::-webkit-scrollbar-thumb {
+  background: #363a45;
+  border-radius: 3px;
+}
+
+.tv-position-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Form Row ── */
+.tv-pos-row {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  gap: 16px;
+}
+
+.tv-pos-label {
+  font-size: 13px;
+  color: #d1d4dc;
+  font-weight: 400;
+  white-space: nowrap;
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.tv-pos-control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+/* ── Inputs & Groups ── */
+.tv-pos-input {
+  background: #131722;
+  border: 1px solid #363a45;
+  border-radius: 4px;
+  color: #f0f3fa;
+  font-size: 13px;
+  padding: 4px 10px;
+  outline: none;
+  width: 110px;
+  height: 28px;
+  box-sizing: border-box;
+  text-align: left;
+  transition: border-color 120ms;
+  font-family: inherit;
+}
+
+.tv-pos-input:focus {
+  border-color: #2962ff;
+}
+
+.tv-pos-input--full {
+  width: 100%;
+}
+
+.tv-pos-input--number {
+  width: 100px;
+}
+
+.tv-pos-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.tv-pos-select {
+  background: #131722;
+  border: 1px solid #363a45;
+  border-radius: 4px;
+  color: #f0f3fa;
+  font-size: 13px;
+  padding: 3px 8px;
+  outline: none;
+  cursor: pointer;
+  height: 28px;
+  box-sizing: border-box;
+  transition: border-color 120ms;
+  font-family: inherit;
+  min-width: 76px;
+}
+
+.tv-pos-select:focus {
+  border-color: #2962ff;
+}
+
+.tv-pos-select--full {
+  width: 180px;
+}
+
+.tv-pos-select--compact {
+  min-width: 58px;
+  width: 58px;
+}
+
+/* ── Section Dividers ── */
+.tv-pos-section-divider {
+  margin-top: 10px;
+  margin-bottom: 2px;
+}
+
+.tv-pos-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #787b86;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ── Checkbox Row ── */
+.tv-pos-checkbox-row {
+  margin-top: 4px;
+}
+
+/* ── Line & Text Groups ── */
+.tv-pos-line-preview {
+  width: 52px;
+  height: 28px;
+  border: 1px solid #363a45;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #131722;
+  box-sizing: border-box;
+}
+
+.tv-line-sample {
+  width: 32px;
+  height: 2px;
+  background: #787b86;
+}
+
+.tv-line-sample--dashed {
+  background: repeating-linear-gradient(90deg, #787b86 0, #787b86 4px, transparent 4px, transparent 8px);
+}
+
+.tv-line-sample--dotted {
+  background: repeating-linear-gradient(90deg, #787b86 0, #787b86 2px, transparent 2px, transparent 4px);
+}
+
+/* ── Visibility List & Sliders ── */
+.tv-visibility-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tv-vis-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #d1d4dc;
+  cursor: pointer;
+}
+
+.tv-vis-slider-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tv-vis-range-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tv-vis-input {
+  width: 48px;
+  background: #131722;
+  border: 1px solid #363a45;
+  border-radius: 4px;
+  color: #d1d4dc;
+  font-size: 12px;
+  padding: 4px 6px;
+  text-align: center;
+  outline: none;
+}
+
+.tv-vis-slider-track {
+  width: 65px;
+  height: 4px;
+  background: #363a45;
+  border-radius: 2px;
+  position: relative;
+}
+
+.tv-vis-slider-thumb {
+  position: absolute;
+  top: 50%;
+  left: 30%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: #d1d4dc;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* ── Footer ── */
+.tv-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid #2a2e39;
+  background: #1e222d;
+}
+
+.tv-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tv-btn {
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 6px 16px;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  transition: all 120ms;
+}
+
+.tv-btn--primary {
+  background: #ffffff;
+  color: #131722;
+  border: 1px solid #ffffff;
+}
+
+.tv-btn--primary:hover {
+  background: #e0e3eb;
+  border-color: #e0e3eb;
+}
+
+.tv-btn--secondary {
+  background: transparent;
+  color: #d1d4dc;
+  border: 1px solid #363a45;
+}
+
+.tv-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  border-color: #50535e;
+}
+
+.tv-btn--ghost {
+  background: transparent;
+  color: #d1d4dc;
+  border: 1px solid #363a45;
+  padding: 6px 12px;
+  font-weight: 500;
+}
+
+.tv-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.tv-chevron {
+  font-size: 10px;
+  margin-left: 4px;
+}
+
+/* ── Template Menu ── */
+.tv-template-wrap {
+  position: relative;
+}
+
+.tv-template-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: #1e222d;
+  border: 1px solid #2a2e39;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  z-index: 10001;
+}
+
+.tv-template-item {
+  background: transparent;
+  border: none;
+  color: #d1d4dc;
+  font-size: 13px;
+  padding: 8px 14px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 100ms, color 100ms;
+}
+
+.tv-template-item:hover {
+  background: #2962ff;
+  color: #ffffff;
+}
+
+.tv-template-divider {
+  height: 1px;
+  background: #2a2e39;
+  margin: 4px 0;
+}
+
+/* ── Save Template Dialog ── */
+.tv-save-template-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10005;
+}
+
+.tv-save-template-dialog {
+  background: #1e222d;
+  border: 1px solid #2a2e39;
+  border-radius: 8px;
+  padding: 16px;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+}
+
+.tv-save-template-title {
+  margin: 0;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.tv-save-template-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

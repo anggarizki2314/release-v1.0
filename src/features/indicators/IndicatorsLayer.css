@@ -1,0 +1,446 @@
+/* ── Indicators Layer & Canvas ── */
+.indicators-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.indicators-svg-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── Daye Quarterly Theory Bottom Pane ── */
+.daye-quarters-bottom-pane {
+  position: absolute;
+  bottom: 26px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: var(--bg-panel, #16181e);
+  border-top: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.09));
+  display: flex;
+  flex-direction: column;
+  z-index: 21;
+  pointer-events: auto;
+  user-select: none;
+  box-shadow: var(--shadow-panel, 0 4px 16px rgba(0, 0, 0, 0.5));
+}
+
+.daye-quarters-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 10px;
+  background: var(--bg-panel-alt, #1a1d24);
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.09));
+}
+
+.daye-quarters-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.daye-quarters-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.daye-quarters-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+  letter-spacing: 0.3px;
+  font-family: var(--font-ui, sans-serif);
+}
+
+.daye-quarters-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+
+.daye-quarters-header:hover .daye-quarters-actions {
+  opacity: 1;
+}
+
+.daye-pane-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  padding: 2px 3px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.daye-pane-action-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.daye-pane-action-btn.is-del:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.daye-quarters-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.daye-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
+  font-family: var(--font-mono, monospace);
+}
+
+.daye-badge.q1 {
+  background: #1b202e;
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.daye-badge.q2 {
+  background: #381318;
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+.daye-badge.q3 {
+  background: #0e3325;
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+.daye-badge.q4 {
+  background: #131e38;
+  color: #60a5fa;
+  border-color: rgba(96, 165, 250, 0.25);
+}
+
+.daye-quarters-body {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-app, #121418);
+}
+
+.daye-quarters-labels-col {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 65px;
+  background: var(--bg-panel, #16181e);
+  border-right: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.daye-quarters-row-label {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+  font-family: var(--font-ui, sans-serif);
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.09));
+}
+
+.daye-quarters-row-label:last-child {
+  border-bottom: none;
+}
+
+.daye-quarters-svg {
+  display: block;
+  width: 100%;
+}
+
+/* ── Full-Width TradingView-Style RSI Bottom Sub-Pane ── */
+.rsi-bottom-subpane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: var(--bg-panel, #131722);
+  border-top: 1px solid var(--border-strong, rgba(255, 255, 255, 0.14));
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  pointer-events: auto;
+  user-select: none;
+  box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.4);
+}
+
+.rsi-pane-resize-handle {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  cursor: ns-resize;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.rsi-pane-resize-bar {
+  width: 42px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.rsi-pane-resize-handle:hover .rsi-pane-resize-bar,
+.rsi-bottom-subpane:hover .rsi-pane-resize-bar {
+  opacity: 0.8;
+}
+
+.rsi-pane-resize-handle:hover .rsi-pane-resize-bar:hover,
+.rsi-pane-resize-handle:active .rsi-pane-resize-bar {
+  background: #a855f7;
+  opacity: 1;
+}
+
+.rsi-pane-header {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  background: var(--bg-panel-alt, #181b24);
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.rsi-pane-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rsi-pane-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rsi-pane-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary, #cbd5e1);
+  letter-spacing: 0.2px;
+  font-family: var(--font-ui, sans-serif);
+}
+
+.rsi-pane-live-val {
+  font-size: 11px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+}
+
+.rsi-pane-live-ma-val {
+  font-size: 11px;
+  font-weight: 800;
+  color: #eab308;
+  font-family: var(--font-mono, monospace);
+}
+
+.rsi-pane-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+
+.rsi-pane-header:hover .rsi-pane-actions {
+  opacity: 1;
+}
+
+.rsi-pane-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  padding: 2px 3px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.rsi-pane-action-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.rsi-pane-action-btn.is-del:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.rsi-pane-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rsi-pane-settings-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted, #94a3b8);
+  border-radius: 4px;
+  padding: 2px 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.rsi-pane-settings-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.rsi-reset-scale-btn {
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: #d8b4fe;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rsi-reset-scale-btn:hover {
+  background: rgba(168, 85, 247, 0.3);
+  color: #ffffff;
+  border-color: #a855f7;
+}
+
+.rsi-level-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted, #94a3b8);
+  font-family: var(--font-mono, monospace);
+}
+
+.rsi-pane-body {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  background: var(--bg-app, #121418);
+}
+
+.rsi-plot-svg {
+  display: block;
+  flex: 1;
+  cursor: grab;
+  user-select: none;
+}
+
+.rsi-plot-svg.is-panning {
+  cursor: grabbing !important;
+}
+
+.rsi-axis-column {
+  position: relative;
+  background: var(--bg-panel, #131722);
+  border-left: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  flex-shrink: 0;
+  overflow: hidden;
+  cursor: ns-resize;
+  user-select: none;
+  transition: background 0.12s ease;
+}
+
+.rsi-axis-column:hover {
+  background: var(--bg-panel-alt, #181b24);
+}
+
+.rsi-axis-label {
+  position: absolute;
+  right: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  font-family: var(--font-mono, monospace);
+  line-height: 1;
+}
+
+.rsi-axis-live-badge {
+  position: absolute;
+  right: 3px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  line-height: 1.1;
+  z-index: 5;
+}
+
+.rsi-axis-live-badge.is-rsi {
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.rsi-axis-live-badge.is-ma {
+  background: rgba(234, 179, 8, 0.2);
+  border: 1px solid #eab308;
+  color: #fef08a;
+}
+
+.rsi-axis-live-badge.is-crosshair {
+  background: #363a45;
+  border: 1px solid #94a3b8;
+  color: #ffffff;
+  z-index: 10;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}

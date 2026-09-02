@@ -1,0 +1,208 @@
+/* ── Replay Timeline (Day 14) ── */
+
+.replay-timeline {
+  display: none !important;
+}
+
+.replay-timeline--hidden {
+  display: none;
+}
+
+/* ── Timestamp labels row ── */
+.replay-timeline__labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.replay-timeline__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.replay-timeline__label--current {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+/* ── Track ── */
+.replay-timeline__track {
+  position: relative;
+  height: 6px;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: height var(--transition-fast);
+}
+
+.replay-timeline__track:hover {
+  height: 8px;
+}
+
+/* Filled portion (start → current) */
+.replay-timeline__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+  pointer-events: none;
+  transition: width 80ms linear;
+}
+
+/* ── Markers ── */
+
+/* Start marker (dot at left) */
+.replay-timeline__marker-start,
+.replay-timeline__marker-end {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  border: 1.5px solid var(--bg-panel);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.replay-timeline__marker-start {
+  left: 0%;
+}
+
+.replay-timeline__marker-end {
+  left: 100%;
+}
+
+.replay-timeline__marker-start:hover,
+.replay-timeline__marker-end:hover {
+  background: var(--accent);
+  transform: translate(-50%, -50%) scale(1.4);
+}
+
+/* Current position thumb (draggable) */
+.replay-timeline__thumb {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px rgba(79, 134, 247, 0.3), 0 1px 4px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: grab;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  z-index: 2;
+}
+
+.replay-timeline__thumb:hover {
+  box-shadow: 0 0 0 4px rgba(79, 134, 247, 0.25), 0 2px 8px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.replay-timeline__thumb:active,
+.replay-timeline__thumb--dragging {
+  cursor: grabbing;
+  box-shadow: 0 0 0 6px rgba(79, 134, 247, 0.2), 0 2px 10px rgba(0, 0, 0, 0.6);
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* ── Tooltip ── */
+.replay-timeline__tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: var(--z-tooltip);
+  box-shadow: var(--shadow-panel);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.replay-timeline__tooltip--visible {
+  opacity: 1;
+}
+
+.replay-timeline__tooltip-date {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+/* ── Click-to-jump input overlay ── */
+.replay-timeline__jump-wrap {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-dropdown);
+}
+
+.replay-timeline__jump-input {
+  width: 160px;
+  height: 28px;
+  padding: 0 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  outline: none;
+  text-align: center;
+  box-shadow: var(--shadow-panel);
+}
+
+.replay-timeline__jump-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ── Jump button (calendar icon trigger) ── */
+.replay-timeline__jump-btn {
+  position: absolute;
+  top: 50%;
+  right: -28px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.replay-timeline__jump-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}

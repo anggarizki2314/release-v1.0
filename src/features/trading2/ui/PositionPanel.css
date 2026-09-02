@@ -1,0 +1,213 @@
+/* Trading Engine 2.0 — PositionPanel.css */
+
+.te2-position-panel-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.te2-position-card {
+  background: rgba(18, 22, 32, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.te2-position-card.buy {
+  border-left: 4px solid #089981;
+}
+
+.te2-position-card.sell {
+  border-left: 4px solid #f23645;
+}
+
+.te2-pos-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 8px;
+}
+
+.te2-pos-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.te2-pos-side-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.te2-pos-side-badge.buy {
+  background: #089981;
+}
+
+.te2-pos-side-badge.sell {
+  background: #f23645;
+}
+
+.te2-pos-symbol {
+  color: #f0f3fa;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+.te2-pos-volume {
+  color: #787b86;
+  font-size: 12px;
+}
+
+.te2-pos-status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: rgba(8, 153, 129, 0.15);
+  color: #089981;
+  border: 1px solid rgba(8, 153, 129, 0.3);
+}
+
+.te2-pos-row-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.te2-pos-stat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.te2-pos-stat-box.btn-box {
+  justify-content: flex-end;
+}
+
+.te2-pos-label {
+  font-size: 11px;
+  color: #787b86;
+  font-weight: 500;
+}
+
+.te2-pos-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d1d4dc;
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+}
+
+.te2-pos-value.price.active {
+  color: #2962ff;
+}
+
+.te2-pos-value.pnl.profit {
+  color: var(--bull, #2fbf8f);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.te2-pos-value.pnl.loss {
+  color: var(--bear, #ef4a63);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.te2-pos-value.profit {
+  color: var(--bull, #2fbf8f);
+}
+
+.te2-pos-value.loss {
+  color: var(--bear, #ef4a63);
+}
+
+.te2-pos-value.rr {
+  color: #f0b90b;
+}
+
+.te2-pos-value.sub {
+  color: #9db2ce;
+  font-size: 12px;
+}
+
+.te2-pos-modify-btn {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 10;
+  transition: all 0.15s ease;
+}
+
+.te2-pos-modify-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.te2-pos-bep-btn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 10;
+  transition: all 0.15s ease;
+}
+
+.te2-pos-bep-btn:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: #fbbf24;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+.te2-pos-bep-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.te2-pos-close-btn {
+  background: rgba(242, 54, 69, 0.15);
+  color: #f23645;
+  border: 1px solid rgba(242, 54, 69, 0.3);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 10;
+  transition: all 0.15s ease;
+}
+
+.te2-pos-close-btn:hover {
+  background: #f23645;
+  color: #ffffff;
+}

@@ -1,0 +1,99 @@
+.bottom-panel {
+  position: relative;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: height var(--transition-med);
+}
+
+.bottom-panel__resize-handle {
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  cursor: row-resize;
+  z-index: 5;
+  touch-action: none;
+}
+
+.bottom-panel__resize-handle:hover {
+  background: rgba(79, 134, 247, 0.25);
+}
+
+.bottom-panel__tabbar {
+  height: var(--bottompanel-collapsed-h);
+  min-height: var(--bottompanel-collapsed-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 0 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.bottom-panel__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+  overflow-x: auto;
+}
+
+.bottom-panel__tab {
+  height: 100%;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.bottom-panel__tab:hover {
+  color: var(--text-primary);
+}
+
+.bottom-panel__tab.is-active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+
+.bottom-panel__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.bottom-panel__toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.bottom-panel__content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.bottom-panel__empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}

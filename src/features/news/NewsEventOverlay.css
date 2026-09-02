@@ -1,0 +1,245 @@
+/* ─────────────────────────────────────────────────────────────────────
+   NewsEventOverlay — TradingView-style country flag economic markers
+   ───────────────────────────────────────────────────────────────────── */
+
+.news-event-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 35;
+  overflow: hidden;
+}
+
+.news-event-overlay__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  z-index: 99;
+}
+
+/* ── Flag Marker Pin (Docked on Time Scale) ── */
+.news-flag-marker {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 40;
+  transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1), filter 120ms ease;
+  user-select: none;
+}
+
+.news-flag-marker:hover,
+.news-flag-marker.is-active {
+  transform: translateX(-50%) translateY(-2px) scale(1.12);
+  z-index: 45;
+}
+
+.news-flag-marker__badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #1e222d;
+  border: 1px solid rgba(239, 68, 68, 0.85);
+  border-radius: 4px;
+  padding: 2px 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  line-height: 1;
+  position: relative;
+}
+
+.news-flag-marker.is-med-impact .news-flag-marker__badge {
+  border-color: rgba(245, 158, 11, 0.85);
+}
+
+.news-flag-marker__currency {
+  font-size: 10px;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 0.2px;
+  font-family: inherit;
+}
+
+.news-flag-marker__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ef4444;
+  flex-shrink: 0;
+}
+
+.news-flag-marker.is-med-impact .news-flag-marker__dot {
+  background: #f59e0b;
+}
+
+/* Downward anchor pointing directly to the hour on the timeline scale */
+.news-flag-marker__pin-point {
+  width: 0;
+  height: 0;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-top: 4.5px solid rgba(239, 68, 68, 0.9);
+  margin-top: -1px;
+}
+
+.news-flag-marker.is-med-impact .news-flag-marker__pin-point {
+  border-top-color: rgba(245, 158, 11, 0.9);
+}
+
+/* ── Popover Event Card ── */
+.news-event-card {
+  position: absolute;
+  width: 250px;
+  background: var(--bg-elevated, #16181e);
+  border: 1px solid var(--border-strong, #2a2e39);
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  padding: 10px 12px;
+  pointer-events: auto;
+  z-index: 100;
+  animation: news-card-fade-in 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+}
+
+@keyframes news-card-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.news-event-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.news-event-card__country {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.news-event-card__currency {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-primary, #ffffff);
+}
+
+.news-event-card__impact-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.4px;
+}
+
+.news-event-card__impact-badge.is-high {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.news-event-card__impact-badge.is-medium {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.news-event-card__close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #94a3b8);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.news-event-card__close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.news-event-card__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.news-event-card__time {
+  font-size: 11px;
+  color: var(--text-secondary, #838da0);
+  margin-bottom: 8px;
+}
+
+.news-event-card__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: var(--bg-app, rgba(0, 0, 0, 0.3));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.news-event-card__stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.news-event-card__stat-label {
+  font-size: 10px;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.news-event-card__stat-val {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  font-family: var(--font-mono, monospace);
+}
+
+.news-event-card__stat-val.actual {
+  color: #38bdf8;
+}
+
+/* Light Theme Overrides */
+.theme-light .news-flag-marker__badge {
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.theme-light .news-flag-marker__currency {
+  color: #131722;
+}
+
+.theme-light .news-event-card {
+  background: #ffffff;
+  border-color: #d1d4dc;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.theme-light .news-event-card__stats {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+

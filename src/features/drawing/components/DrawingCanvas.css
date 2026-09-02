@@ -1,0 +1,21 @@
+.drawing-canvas,
+.drawing-layer-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.drawing-capture-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  cursor: crosshair;
+}
+
+.axis-overlay-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}

@@ -1,0 +1,30 @@
+=======================================================
+TRADAPRO — ADMIN LICENSE KEY GENERATOR (OFFICIAL)
+=======================================================
+
+File Keygen:
+- TradePro-Admin-Keygen.html
+
+Pilihan Durasi Lisensi:
+1. Pro Lifetime (Akses Selamanya)
+2. Pro 1 Tahun (365 Hari)
+3. Pro 6 Bulan (180 Hari)
+4. Pro 3 Bulan (90 Hari)
+
+Cara Menggunakan:
+1. Buka file "TradePro-Admin-Keygen.html" menggunakan browser (Chrome, Edge, Firefox, Brave, dll).
+2. Bersifat 100% offline (tidak perlu server/database).
+3. Masukkan "Hardware ID (HWID)" dari user (yang muncul di aplikasi TradePro saat aktivasi).
+4. Pilih Jenis Lisensi (3 Bulan / 6 Bulan / 1 Tahun / Lifetime).
+5. Klik tombol "⚡ Generate Activation Key".
+6. Klik "Salin Format WA Siap Kirim" atau "Salin Kode Saja", lalu kirimkan ke pembeli.
+
+-------------------------------------------------------
+KEAMANAN & ANTI-MANIPULASI TANGGAL (ANTI-CLOCK ROLLBACK):
+-------------------------------------------------------
+Q: Bagaimana jika user memundurkan tanggal/jam di komputernya agar lisensi tidak kedaluwarsa?
+A: Aplikasi TradePro dilengkapi proteksi "High-Watermark Anti-Rollback Time Tracking".
+   - Aplikasi mencatat waktu tertinggi (timestamp) setiap kali aplikasi dibuka/berjalan di database lokal terenkripsi.
+   - Jika user mencoba memundurkan tanggal Windows mereka ke masa lalu, aplikasi akan mendeteksi perbedaan waktu mundur tersebut dan langsung mengunci aplikasi dengan pesan: "Manipulasi tanggal sistem terdeteksi".
+   - Jika masa aktif lisensi sudah lewat (expired), memundurkan tanggal TIDAK BISA membuka kuncinya kembali.
+=======================================================

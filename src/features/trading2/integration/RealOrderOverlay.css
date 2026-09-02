@@ -1,0 +1,312 @@
+/* Trading Engine 2.0 — TradingView-style Order Overlay Lines & Badges */
+
+.te2-real-overlay-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 40;
+  user-select: none;
+}
+
+.te2-real-line-group {
+  pointer-events: auto;
+}
+
+.te2-real-line-group.sl-group,
+.te2-real-line-group.tp-group {
+  cursor: ns-resize;
+}
+
+.te2-real-line-group.entry-group {
+  cursor: default;
+}
+
+.te2-real-line-group:hover .te2-real-line {
+  stroke-width: 2px;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.te2-real-hitbox {
+  stroke: transparent;
+  stroke-width: 14px;
+  pointer-events: stroke;
+}
+
+.te2-real-hitbox.sl-hitbox,
+.te2-real-hitbox.tp-hitbox {
+  cursor: ns-resize;
+}
+
+.te2-real-hitbox.entry-hitbox {
+  cursor: default;
+}
+
+.te2-real-line {
+  stroke-dasharray: 4 3;
+  stroke-width: 1.2px;
+  transition: stroke-width 0.15s ease;
+  pointer-events: none;
+}
+
+.te2-real-line.entry.buy {
+  stroke: #2962ff;
+  color: #2962ff;
+}
+
+.te2-real-line.entry.sell {
+  stroke: #f23645;
+  color: #f23645;
+}
+
+.te2-real-line.sl {
+  stroke: #f23645;
+  color: #f23645;
+}
+
+.te2-real-line.tp {
+  stroke: #089981;
+  color: #089981;
+}
+
+/* Vertical Connector Line & Dots */
+.tv-connector-line {
+  stroke: #2962ff;
+  stroke-width: 1.2px;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.tv-connector-dot {
+  fill: #131722;
+  stroke-width: 1.5px;
+  pointer-events: none;
+}
+
+.tv-connector-dot.entry {
+  stroke: #2962ff;
+}
+
+.tv-connector-dot.sl {
+  stroke: #f23645;
+}
+
+.tv-connector-dot.tp {
+  stroke: #089981;
+}
+
+/* TradingView Badges Layout */
+.tv-badge-entry-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  user-select: none;
+}
+
+/* Small TP / SL Toggle Pills on Entry */
+.tv-pill-toggle {
+  background: rgba(19, 23, 34, 0.95);
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  cursor: pointer;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.tv-pill-toggle:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+}
+
+.tv-pill-toggle.tp.active {
+  border-color: #089981;
+  color: #34d399;
+  background: rgba(8, 153, 129, 0.15);
+}
+
+.tv-pill-toggle.sl.active {
+  border-color: #f23645;
+  color: #f87171;
+  background: rgba(242, 54, 69, 0.15);
+}
+
+.tv-pill-toggle.bep {
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.tv-pill-toggle.bep.active {
+  border-color: #f59e0b;
+  color: #fde047;
+  background: rgba(245, 158, 11, 0.2);
+}
+
+/* Main Entry Badge: [ volume | Buy Limit / Buy | ✕ ] */
+.tv-pill-main {
+  background: rgba(19, 23, 34, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid #2962ff;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f8fafc;
+  pointer-events: auto;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.tv-pill-main.sell {
+  border-color: #f23645;
+}
+
+.tv-pill-main.active-pos.sell {
+  border-color: #f23645;
+}
+
+.tv-pill-main.active-pos.buy {
+  border-color: #2962ff;
+}
+
+/* Filled Tag for Active Positions (e.g. -1 or +1) */
+.tv-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 7px;
+  font-weight: 700;
+  font-size: 11px;
+  color: #ffffff;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.tv-pill-tag.sell {
+  background: #f23645;
+}
+
+.tv-pill-tag.buy {
+  background: #2962ff;
+}
+
+/* SL and TP Pill Badges */
+.tv-badge-pill {
+  background: rgba(19, 23, 34, 0.95);
+  backdrop-filter: blur(8px);
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  pointer-events: auto;
+  cursor: ns-resize;
+  overflow: hidden;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.tv-badge-pill.tp {
+  border: 1px dashed #089981;
+  color: #34d399;
+}
+
+.tv-badge-pill.sl {
+  border: 1px dashed #f23645;
+  color: #ffa726;
+}
+
+/* Internal Pill Segments */
+.tv-pill-segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  white-space: nowrap;
+}
+
+.tv-pill-segment.vol,
+.tv-pill-segment.rr {
+  padding: 0 7px;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  font-weight: 700;
+  color: #cbd5e1;
+  font-size: 11px;
+}
+
+.tv-pill-segment.title {
+  padding: 0 8px;
+  font-weight: 600;
+  color: #f8fafc;
+  font-size: 11px;
+}
+
+.tv-pill-segment.amount {
+  padding: 0 8px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.2px;
+}
+
+.tv-pill-segment.amount.profit {
+  color: #34d399;
+}
+
+.tv-pill-segment.amount.loss {
+  color: #ffa726;
+}
+
+.tv-pill-segment.pnl {
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.tv-pill-segment.pnl.profit {
+  color: #34d399;
+}
+
+.tv-pill-segment.pnl.loss {
+  color: #f87171;
+}
+
+/* Segment Close Button (✕) */
+.tv-pill-segment.close {
+  padding: 0 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: none;
+  border-bottom: none;
+  border-right: none;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: bold;
+  background: transparent;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.tv-pill-segment.close:hover {
+  color: #ffffff;
+  background: rgba(242, 54, 69, 0.7);
+}

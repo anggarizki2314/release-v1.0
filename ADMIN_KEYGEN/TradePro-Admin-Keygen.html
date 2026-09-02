@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TradePro — Admin License Generator (Official)</title>
+  <style>
+    :root {
+      --bg: #0b0d13;
+      --card-bg: #131722;
+      --border: rgba(255, 255, 255, 0.1);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #22c55e;
+      --amber: #f59e0b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background-image: 
+        radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 40%);
+    }
+
+    .keygen-card {
+      width: 100%;
+      max-width: 580px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .keygen-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6, #f59e0b);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 999px;
+      color: #60a5fa;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input, select {
+      width: 100%;
+      background: #090b10;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+      background: #0e1118;
+    }
+
+    input.mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.95rem;
+      letter-spacing: 0.03em;
+    }
+
+    .btn-generate {
+      width: 100%;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-top: 8px;
+    }
+
+    .btn-generate:hover {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 26px rgba(37, 99, 235, 0.45);
+    }
+
+    .btn-generate:active {
+      transform: translateY(1px);
+    }
+
+    .result-section {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-box {
+      background: #090b10;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .result-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--success);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .key-display {
+      width: 100%;
+      background: #111520;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      color: #93c5fd;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82rem;
+      word-break: break-all;
+      line-height: 1.4;
+      user-select: all;
+      cursor: pointer;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-copy {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+    }
+
+    .btn-copy:hover {
+      background: rgba(59, 130, 246, 0.25);
+      color: #ffffff;
+    }
+
+    .btn-wa {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #86efac;
+    }
+
+    .btn-wa:hover {
+      background: rgba(34, 197, 94, 0.25);
+      color: #ffffff;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="keygen-card">
+    <div class="header">
+      <div class="badge">TradePro Admin Suite</div>
+      <h1 class="title">Offline License Keygen</h1>
+      <p class="subtitle">Generate kode aktivasi instan 100% terkunci ke Hardware ID pembeli tanpa perlu internet/server.</p>
+    </div>
+
+    <form id="keygenForm" onsubmit="handleGenerate(event)">
+      <div class="form-group">
+        <label for="hwidInput">Hardware ID Pembeli (Wajib)</label>
+        <input 
+          type="text" 
+          id="hwidInput" 
+          class="mono" 
+          placeholder="Contoh: HWID-89A7-BC21-1234" 
+          required 
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="buyerInput">Nama / WhatsApp Pembeli</label>
+        <input 
+          type="text" 
+          id="buyerInput" 
+          placeholder="Contoh: Budi Santoso" 
+          value="Trader"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="planInput">Jenis Lisensi</label>
+        <select id="planInput">
+          <option value="PRO_LIFETIME">Pro Lifetime (Akses Selamanya)</option>
+          <option value="PRO_1YEAR">Pro 1 Tahun (365 Hari)</option>
+          <option value="PRO_6MONTHS">Pro 6 Bulan (180 Hari)</option>
+          <option value="PRO_3MONTHS">Pro 3 Bulan (90 Hari)</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn-generate">⚡ Generate Activation Key</button>
+    </form>
+
+    <div id="resultSection" class="result-section">
+      <div class="result-box">
+        <div class="result-header">
+          <span class="result-title">✓ Kode Aktivasi Berhasil Dibuat</span>
+          <span id="genTime" style="font-size: 0.72rem; color: #64748b;">Baru saja</span>
+        </div>
+        <div id="keyOutput" class="key-display" title="Klik untuk salin"></div>
+      </div>
+
+      <div class="button-row">
+        <button type="button" class="btn-action btn-copy" onclick="copyKeyOnly()">
+          <span id="copyKeyText">📋 Salin Kode Saja</span>
+        </button>
+        <button type="button" class="btn-action btn-wa" onclick="copyWhatsAppTemplate()">
+          <span id="copyWaText">💬 Salin Format WA Siap Kirim</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="footer">
+      Secured with Ed25519 Asymmetric Digital Signature • TradePro © 2026
+    </div>
+  </div>
+
+  <script>
+    // Private Signing Key (HANYA TERSIMPAN DI FILE ADMIN INI)
+    const PRIVATE_KEY_PEM = `-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIEA2BElrv6chUnAuN2kBFFyYLyF2p/ttydZRP5K2R0Ci
+-----END PRIVATE KEY-----`;
+
+    let generatedKey = '';
+    let currentBuyer = '';
+    let currentHwid = '';
+    let currentPlanName = 'Pro Lifetime';
+
+    // Convert Base64 string to Uint8Array
+    function b64ToUint8(b64) {
+      const bin = atob(b64);
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return arr;
+    }
+
+    // Convert Uint8Array to base64url
+    function uint8ToBase64Url(uint8) {
+      let bin = '';
+      for (let i = 0; i < uint8.length; i++) {
+        bin += String.fromCharCode(uint8[i]);
+      }
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    // Parse PKCS8 PEM to CryptoKey
+    async function getSigningKey() {
+      const pemHeader = '-----BEGIN PRIVATE KEY-----';
+      const pemFooter = '-----END PRIVATE KEY-----';
+      const b64 = PRIVATE_KEY_PEM.replace(pemHeader, '').replace(pemFooter, '').replace(/\s/g, '');
+      const binaryDer = b64ToUint8(b64);
+
+      return await window.crypto.subtle.importKey(
+        'pkcs8',
+        binaryDer,
+        { name: 'Ed25519' },
+        false,
+        ['sign']
+      );
+    }
+
+    async function handleGenerate(e) {
+      e.preventDefault();
+      
+      const hwidRaw = document.getElementById('hwidInput').value.trim().toUpperCase();
+      const buyerName = document.getElementById('buyerInput').value.trim() || 'Trader';
+      const plan = document.getElementById('planInput').value;
+
+      if (!hwidRaw) {
+        alert('Harap masukkan Hardware ID Pembeli!');
+        return;
+      }
+
+      currentHwid = hwidRaw;
+      currentBuyer = buyerName;
+
+      let exp = 0;
+      let planName = 'Pro Lifetime';
+      const now = Date.now();
+
+      if (plan === 'PRO_3MONTHS') {
+        exp = now + (90 * 24 * 60 * 60 * 1000);
+        planName = 'Pro 3 Bulan';
+      } else if (plan === 'PRO_6MONTHS') {
+        exp = now + (180 * 24 * 60 * 60 * 1000);
+        planName = 'Pro 6 Bulan';
+      } else if (plan === 'PRO_1YEAR') {
+        exp = now + (365 * 24 * 60 * 60 * 1000);
+        planName = 'Pro 1 Tahun';
+      } else {
+        exp = 0;
+        planName = 'Pro Lifetime';
+      }
+
+      currentPlanName = planName;
+
+      try {
+        const payload = JSON.stringify({
+          h: hwidRaw,
+          b: buyerName,
+          t: now,
+          p: plan,
+          planName: planName,
+          exp: exp
+        });
+
+        const encoder = new TextEncoder();
+        const payloadBytes = encoder.encode(payload);
+        const payloadB64 = uint8ToBase64Url(payloadBytes);
+
+        // Sign payload with Ed25519 Private Key
+        const key = await getSigningKey();
+        const signatureBytes = await window.crypto.subtle.sign(
+          { name: 'Ed25519' },
+          key,
+          encoder.encode(payloadB64)
+        );
+
+        const sigB64 = uint8ToBase64Url(new Uint8Array(signatureBytes));
+        generatedKey = `ACT-${payloadB64}.${sigB64}`;
+
+        // Render UI
+        document.getElementById('keyOutput').textContent = generatedKey;
+        document.getElementById('resultSection').style.display = 'block';
+        document.getElementById('genTime').textContent = new Date().toLocaleTimeString();
+
+        // Scroll into view
+        document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        alert('Gagal generate key: ' + err.message);
+      }
+    }
+
+    function copyKeyOnly() {
+      if (!generatedKey) return;
+      navigator.clipboard.writeText(generatedKey).then(() => {
+        const el = document.getElementById('copyKeyText');
+        el.textContent = '✓ Tersalin!';
+        setTimeout(() => el.textContent = '📋 Salin Kode Saja', 2000);
+      });
+    }
+
+    function copyWhatsAppTemplate() {
+      if (!generatedKey) return;
+      const text = `Halo Kak ${currentBuyer}, terima kasih sudah berlangganan TradePro Replay Engine (${currentPlanName})! 🚀\n\nBerikut Kode Aktivasi khusus untuk perangkat laptop Anda:\n\n${generatedKey}\n\nCara Aktivasi:\n1. Buka aplikasi TradePro.\n2. Paste Kode Aktivasi di atas pada kotak dialog aktivasi.\n3. Klik "Aktivasi Sekarang" (Bisa langsung offline).\n\nSelamat trading & happy backtesting! 📈🔥`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        const el = document.getElementById('copyWaText');
+        el.textContent = '✓ Format WA Tersalin!';
+        setTimeout(() => el.textContent = '💬 Salin Format WA Siap Kirim', 2000);
+      });
+    }
+  </script>
+</body>
+</html>

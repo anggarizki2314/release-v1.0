@@ -1,0 +1,113 @@
+/* ─────────────────────────────────────────────────────────────────────
+   LeftToolbar — Fixed left-side toolbar wrapper
+   ───────────────────────────────────────────────────────────────────── */
+
+.left-toolbar {
+  width: 52px;
+  min-width: 52px;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: var(--z-topbar);
+  overflow: visible;
+}
+
+.left-toolbar__system-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  width: 100%;
+}
+
+.left-toolbar__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm, 6px);
+  border: none;
+  background: transparent;
+  color: var(--text-primary, #ffffff);
+  opacity: 0.9;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.left-toolbar__btn:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.1));
+  color: var(--text-primary, #ffffff);
+  opacity: 1;
+}
+
+.left-toolbar__menu {
+  position: absolute;
+  left: 56px;
+  top: 48px;
+  min-width: 160px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+  padding: 4px;
+  z-index: var(--z-dropdown);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.left-toolbar__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary, #ffffff);
+  opacity: 0.9;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.left-toolbar__menu-item:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.1));
+  color: var(--text-primary, #ffffff);
+  opacity: 1;
+}
+
+/* ── Light Theme Overrides ── */
+.theme-light .left-toolbar__btn,
+html.theme-light .left-toolbar__btn {
+  color: #131722;
+  opacity: 0.85;
+}
+
+.theme-light .left-toolbar__btn:hover,
+html.theme-light .left-toolbar__btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #000000;
+  opacity: 1;
+}
+
+.theme-light .left-toolbar__menu-item,
+html.theme-light .left-toolbar__menu-item {
+  color: #131722;
+  opacity: 0.9;
+}
+
+.theme-light .left-toolbar__menu-item:hover,
+html.theme-light .left-toolbar__menu-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #000000;
+  opacity: 1;
+}

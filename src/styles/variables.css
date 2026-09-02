@@ -1,0 +1,62 @@
+:root {
+  /* Surfaces — TradingView Dark Standard */
+  --bg-app: #131722;
+  --bg-panel: #131722;
+  --bg-panel-alt: #181d28;
+  --bg-elevated: #1e222d;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-active: rgba(255, 255, 255, 0.08);
+
+  /* Borders */
+  --border-subtle: #2a2e39;
+  --border-strong: #3b4252;
+
+  /* Text */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* Accent */
+  --accent: #2962ff;
+  --accent-soft: rgba(41, 98, 255, 0.14);
+  --accent-bg: rgba(41, 98, 255, 0.08);
+  --accent-strong: #448aff;
+
+  /* Market semantics — TradingView Emerald / Crimson */
+  --bull: #089981;
+  --bull-soft: rgba(8, 153, 129, 0.14);
+  --bear: #f23645;
+  --bear-soft: rgba(242, 54, 69, 0.14);
+  --warning: #f59e0b;
+
+  /* Elevation */
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.28);
+  --shadow-float: 0 4px 16px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.4);
+
+  /* Type */
+  --font-ui: 'Bahnschrift SemiBold', Bahnschrift, 'Segoe UI', sans-serif;
+  --font-sans: 'Bahnschrift SemiBold', Bahnschrift, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, "Roboto Mono", monospace;
+
+  /* Metrics */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  --topbar-h: 48px;
+  --toolbar-w: 48px;
+  --bottompanel-h: 220px;
+  --bottompanel-collapsed-h: 34px;
+
+  --transition-fast: 120ms ease;
+  --transition-med: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Stacking order — kept centralized so floating/overlay elements
+     never accidentally end up above interactive controls that must
+     stay clickable (e.g. Import Data button, its dropdown menu). */
+  --z-topbar: 2000;
+  --z-floating-bar: 40;
+  --z-dropdown: 9999;
+  --z-tooltip: 10000;
+}

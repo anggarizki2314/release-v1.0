@@ -1,0 +1,355 @@
+/* ─── Floating Drawing Toolbar (TradingView Style) ─── */
+
+.fd-toolbar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #1e222d;
+  border: 1px solid #2a2e39;
+  border-radius: 6px;
+  padding: 4px 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fd-in 0.12s ease-out;
+  pointer-events: auto;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+}
+
+@keyframes fd-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.fd-toolbar--flip-up .fd-toolbar__dropdown {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+.fd-toolbar__drag-handle {
+  cursor: grab;
+  color: #787b86;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 2px;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.fd-toolbar__drag-handle:active {
+  cursor: grabbing;
+  color: #f0f3fa;
+}
+
+.fd-toolbar__sep {
+  width: 1px;
+  height: 18px;
+  background: #2a2e39;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.fd-toolbar__group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.fd-toolbar__btn {
+  height: 30px;
+  min-width: 30px;
+  padding: 0 6px;
+  border: none;
+  background: transparent;
+  color: #d1d4dc;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: background 120ms, color 120ms;
+}
+
+.fd-toolbar__btn:hover {
+  background: #2a2e39;
+  color: #f0f3fa;
+}
+
+.fd-toolbar__btn.is-active {
+  color: #2962ff;
+  background: rgba(41, 98, 255, 0.15);
+}
+
+.fd-toolbar__btn--danger:hover {
+  background: rgba(242, 54, 69, 0.15);
+  color: #f23645;
+}
+
+/* ── Color button with underline indicator ── */
+.fd-toolbar__btn--color-wrap {
+  position: relative;
+  width: 32px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.fd-color-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d1d4dc;
+  margin-bottom: 3px;
+  pointer-events: none;
+  transition: color 120ms;
+}
+
+.fd-toolbar__btn--color-wrap:hover .fd-color-icon {
+  color: #ffffff;
+}
+
+.fd-color-underline {
+  position: absolute;
+  bottom: 3px;
+  left: 6px;
+  right: 6px;
+  height: 3px;
+  border-radius: 1.5px;
+  pointer-events: none;
+}
+
+.fd-toolbar__btn--color-wrap .color-picker {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.fd-toolbar__btn--color-wrap .color-picker__swatch {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  border-radius: 4px !important;
+}
+
+/* ── Line Width Display (— 1px) ── */
+.fd-toolbar__btn--width {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px;
+}
+
+.fd-toolbar__width-line {
+  width: 14px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+.fd-toolbar__width-text {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ── Line Style Display (—) ── */
+.fd-toolbar__style-line {
+  width: 16px;
+  height: 0;
+  border-top: 2px solid currentColor;
+}
+
+.fd-toolbar__style-line--dashed {
+  border-top-style: dashed;
+}
+
+.fd-toolbar__style-line--dotted {
+  border-top-style: dotted;
+}
+
+/* ── Dropdown Menus ── */
+.fd-toolbar__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e222d;
+  border: 1px solid #2a2e39;
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  min-width: 90px;
+  animation: fd-in 0.1s ease-out;
+}
+
+.fd-toolbar__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: #d1d4dc;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 100ms, color 100ms;
+  font-family: inherit;
+  text-align: left;
+}
+
+.fd-toolbar__dropdown-item:hover {
+  background: #2a2e39;
+  color: #f0f3fa;
+}
+
+.fd-toolbar__dropdown-item.is-active {
+  color: #2962ff;
+  background: rgba(41, 98, 255, 0.15);
+}
+
+.fd-toolbar__width-preview {
+  width: 16px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+/* ── Template Dropdown (Screenshot 2) ── */
+.fd-toolbar__dropdown--templates {
+  left: 0;
+  transform: none;
+  min-width: 230px;
+  max-width: 260px;
+  padding: 4px 0;
+  max-height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+
+.fd-tpl__action-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #d1d4dc;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 100ms, color 100ms;
+  font-family: inherit;
+}
+
+.fd-tpl__action-btn:hover {
+  background: #2a2e39;
+  color: #f0f3fa;
+}
+
+.fd-tpl__action-btn--highlight {
+  margin: 2px 6px;
+  width: calc(100% - 12px);
+  border-radius: 4px;
+  background: #262b36;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.fd-tpl__sep {
+  height: 1px;
+  background: #2a2e39;
+  margin: 4px 0;
+}
+
+.fd-tpl__scroll-list {
+  overflow-y: auto;
+  max-height: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
+.fd-tpl__empty {
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  color: #787b86;
+  padding: 10px 12px;
+}
+
+.fd-tpl__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 100ms;
+}
+
+.fd-tpl__item:hover {
+  background: #2a2e39;
+}
+
+.fd-tpl__apply-btn {
+  flex: 1;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #d1d4dc;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0;
+  font-family: inherit;
+}
+
+.fd-tpl__item:hover .fd-tpl__apply-btn {
+  color: #f0f3fa;
+}
+
+.fd-tpl__delete-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: #787b86;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 120ms, color 120ms;
+}
+
+.fd-tpl__item:hover .fd-tpl__delete-btn {
+  opacity: 1;
+}
+
+.fd-tpl__delete-btn:hover {
+  color: #f23645;
+}
+
+/* ── More Actions Dropdown ── */
+.fd-toolbar__dropdown--more {
+  min-width: 150px;
+  right: 0;
+  left: auto;
+  transform: none;
+}
+

@@ -1,0 +1,262 @@
+.chart-area {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg-app);
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.chart-area--active {
+  border-color: var(--active-pane-border-color, rgba(79, 134, 247, 0.25));
+  box-shadow: inset 0 0 0 1px var(--active-pane-border-color, rgba(79, 134, 247, 0.25)), 0 0 0 1px var(--active-pane-border-color, rgba(79, 134, 247, 0.25));
+}
+
+.chart-area__reset-zone {
+  position: absolute;
+  left: 50%;
+  bottom: 25px;
+  transform: translateX(-50%);
+  width: min(460px, 65%);
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-floating-bar, 50);
+  pointer-events: auto;
+}
+
+.chart-area__reset-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 26px;
+  padding: 0 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 13px;
+  box-shadow: var(--shadow-panel);
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: auto;
+  backdrop-filter: blur(4px);
+  transition: opacity 0.2s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.chart-area__reset-zone:hover .chart-area__reset-view {
+  opacity: 1;
+}
+
+.chart-area__reset-view:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--text-primary);
+  transform: scale(1.06);
+}
+
+.chart-area__empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  text-align: center;
+  pointer-events: none;
+}
+
+.chart-area__empty p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.chart-area__empty span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Per-pane info label (symbol + timeframe) shown when multiple panes are visible */
+.chart-area__pane-label {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.chart-area__pane-symbol {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
+}
+
+.chart-area__pane-tf {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+}
+
+/* ── Pane Header Flat TradingView Controls (Option 2) ── */
+.pane-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pane-header__flat-btn {
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary, #ffffff);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-ui, -apple-system, BlinkMacSystemFont, sans-serif);
+  letter-spacing: -0.01em;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.pane-header__flat-btn:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.08));
+  color: var(--text-primary, #ffffff);
+}
+
+.pane-header__chevron {
+  color: var(--text-muted, #787b86);
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+
+.pane-header__flat-btn:hover .pane-header__chevron {
+  color: var(--text-primary, #ffffff);
+}
+
+.pane-header__divider {
+  width: 1px;
+  height: 14px;
+  background: var(--border-subtle, rgba(255, 255, 255, 0.14));
+  margin: 0 2px;
+}
+
+.pane-header__tf-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.pane-header__tf-btn {
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary, #f1f5f9);
+  font-size: 12.5px;
+  font-weight: 400;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.pane-header__tf-btn:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.1));
+  color: var(--text-primary, #ffffff);
+}
+
+.pane-header__tf-btn.is-active {
+  color: var(--accent, #38bdf8);
+  font-weight: 600;
+  background: var(--accent-soft, rgba(56, 189, 248, 0.15));
+}
+
+.pane-header__tf-chevron-btn {
+  height: 24px;
+  width: 20px;
+  padding: 0;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, #d1d4dc);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.pane-header__tf-chevron-btn:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.1));
+  color: var(--text-primary, #ffffff);
+}
+
+/* Dropdown Menu Row with Star Favoriting */
+.pane-header__tf-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary, #d1d4dc);
+  font-size: 13px;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.pane-header__tf-menu-row:hover {
+  background: var(--bg-hover, #2a2e39);
+  color: var(--text-primary, #ffffff);
+}
+
+.pane-header__tf-menu-row.is-active {
+  color: var(--accent, #38bdf8);
+  font-weight: 500;
+}
+
+.pane-header__tf-menu-label {
+  font-size: 12.5px;
+}
+
+.pane-header__tf-star-btn {
+  background: transparent;
+  border: none;
+  color: #787b86;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s ease, transform 0.12s ease;
+}
+
+.pane-header__tf-star-btn:hover {
+  color: #f59e0b;
+  transform: scale(1.15);
+}
+
+.pane-header__tf-star-btn.is-starred {
+  color: #f59e0b;
+}

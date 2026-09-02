@@ -1,0 +1,249 @@
+/* ─── TradingView Style Color Picker ─── */
+
+.color-picker {
+  position: relative;
+  display: inline-flex;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+}
+
+/* ── Swatch Trigger Button ── */
+.color-picker__swatch {
+  border: 1px solid #363c4e;
+  border-radius: 4px;
+  background: #1e222d;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 120ms;
+  box-sizing: border-box;
+}
+
+.color-picker__swatch:hover {
+  border-color: #50535e;
+}
+
+.color-picker__swatch.is-active {
+  border: 2px solid #2962ff !important;
+}
+
+.color-picker__swatch-inner {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  display: block;
+}
+
+/* ── Popup Panel ── */
+.color-picker__popup.tv-color-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  z-index: 10050;
+  background: #1e222d;
+  border: 1px solid #2a2e39;
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
+  padding: 10px;
+  width: 236px;
+  animation: cp-fade-in 0.1s ease-out;
+}
+
+.color-picker__popup.tv-color-popup.align-left {
+  left: 0 !important;
+  right: auto !important;
+}
+
+.color-picker__popup.tv-color-popup.align-right {
+  right: 0 !important;
+  left: auto !important;
+}
+
+@keyframes cp-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 10x8 Color Matrix ── */
+.tv-color-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tv-color-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.tv-color-cell {
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  position: relative;
+  transition: transform 80ms ease, box-shadow 80ms ease;
+  box-sizing: border-box;
+}
+
+.tv-color-cell:hover {
+  transform: scale(1.2);
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.tv-color-cell.is-selected {
+  box-shadow: inset 0 0 0 1.5px #1e222d, 0 0 0 2px #ffffff !important;
+  z-index: 6;
+}
+
+/* ── Divider ── */
+.tv-color-divider {
+  height: 1px;
+  background: #2a2e39;
+  margin: 10px 0 8px;
+}
+
+/* ── Bottom Custom Color & Slider ── */
+.tv-color-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tv-color-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tv-color-plus-btn {
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 1px solid #363c4e;
+  border-radius: 4px;
+  color: #d1d4dc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 120ms;
+}
+
+.tv-color-plus-btn:hover,
+.tv-color-plus-btn.is-active {
+  background: #2a2e39;
+  color: #f0f3fa;
+  border-color: #50535e;
+}
+
+.tv-color-custom-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.tv-color-hex-input {
+  flex: 1;
+  height: 24px;
+  background: #131722;
+  border: 1px solid #363c4e;
+  border-radius: 3px;
+  color: #f0f3fa;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 0 6px;
+  outline: none;
+}
+
+.tv-color-hex-input:focus {
+  border-color: #2962ff;
+}
+
+.tv-color-hex-ok-btn {
+  height: 24px;
+  padding: 0 8px;
+  background: #2962ff;
+  border: none;
+  border-radius: 3px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Transparansi ── */
+.tv-color-trans-label {
+  font-size: 12px;
+  color: #787b86;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.tv-color-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tv-color-slider-track-wrap {
+  flex: 1;
+  height: 14px;
+  border-radius: 7px;
+  background-image: repeating-conic-gradient(#2a2e39 0% 25%, #1e222d 0% 50%);
+  background-size: 8px 8px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border: 1px solid #363c4e;
+}
+
+.tv-color-slider {
+  width: 100%;
+  height: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  margin: 0;
+  cursor: pointer;
+}
+
+.tv-color-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #1e222d;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.tv-color-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #1e222d;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.tv-color-slider-val {
+  font-size: 12px;
+  color: #d1d4dc;
+  font-weight: 500;
+  min-width: 36px;
+  text-align: right;
+}

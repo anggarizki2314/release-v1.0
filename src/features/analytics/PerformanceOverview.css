@@ -1,0 +1,84 @@
+.perf-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.perf-overview__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1200px) {
+  .perf-overview__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .perf-overview__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.perf-kpi-card {
+  position: relative;
+  background: #181b22;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 105px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.perf-kpi-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.perf-kpi-card__title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.perf-kpi-card__main {
+  margin-top: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.perf-kpi-card__value {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: -0.3px;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.perf-kpi-card__value--green {
+  color: #4ade80;
+}
+
+.perf-kpi-card__value--red {
+  color: #f87171;
+}
+
+.perf-kpi-card__sub {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}

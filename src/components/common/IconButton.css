@@ -1,0 +1,59 @@
+.icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.icon-btn--sm { width: 26px; height: 26px; }
+.icon-btn--md { width: 32px; height: 32px; }
+.icon-btn--lg { width: 38px; height: 38px; }
+
+.icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.icon-btn:active {
+  background: var(--bg-active);
+}
+
+.icon-btn.is-active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border-color: rgba(79, 134, 247, 0.35);
+}
+
+/* Lightweight CSS-only tooltip, no extra dependency needed. */
+.icon-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-2px);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  z-index: 50;
+  box-shadow: var(--shadow-panel);
+}
+
+.icon-btn:hover[data-tooltip]::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  transition-delay: 280ms;
+}

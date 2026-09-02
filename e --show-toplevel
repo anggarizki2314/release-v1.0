@@ -1,0 +1,49 @@
+[33mb658f89[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mstabil_pertama[m[33m)[m fix lag v5
+[33m22c87f5[m fix lag bagus banget, terharu gw
+[33ma567313[m sudah bisa release
+[33m0c8f8fc[m optimalisasi trading engine done
+[33md013675[m optimalisasi replay 4.0
+[33mde1be92[m optimalisasi replay 3.0
+[33md95b9db[m optimalisasi replay 2.0 wkwkkw
+[33m66e4eba[m belum optimalisasi replay 120fps part 2
+[33me539f19[m belum optimalisasi replay 120fps
+[33m2535275[m fix pemilihan tanggal replay, dan replay terakhir
+[33m90982e1[m TINGGAL QC ABIS ITU RELEASE
+[33me3833a4[m stabil LOADING UI
+[33mbdb72cd[m fitur loading done
+[33mfff2b7a[m UI BARU LANJUT FITUR LOADING
+[33md4f61ce[m UI BARU ANALYTIC
+[33mfc3069c[m UI ANALYTIC BARU belom di koreksi
+[33mafda877[m DRAWING ENGINE DONE SHADOW DONE LAGI LANJUT KE ANALYTIC
+[33m6bfa31b[m drawing engine final
+[33md591339[m stabil drawing engine UI baru
+[33med7fade[m drawing engine bagus sebelum ui baru
+[33m4d4a1c5[m drawing engine v1
+[33m060266b[m trading engine done
+[33ma4267e4[m fix viw replay pas jalan
+[33mb9233b9[m nromal sebelum fix veiw replay
+[33meb0f052[m fix multi pair optimmalisasi play replay
+[33m0b6325b[m fix multi pair
+[33ma7dfc19[m fix generator
+[33m9c522ff[m fix timeframe selector and replay ongoing OHLC
+[33m1d49bf2[m fix replay ongoing OHLC and timeframe selector
+[33mcbae135[m ohcl belum stabil
+[33m84d3834[m datahub stabil
+[33m48fa60a[m replay engine v4 belom display
+[33mc824b52[m[33m ([m[1;32madaadassdadsa[m[33m)[m layout stabil tapi belom coba multi pair, baru multi timeframe
+[33m8818d65[m[33m ([m[1;32mcccc[m[33m)[m datahub stabil
+[33mf115600[m UI BAGUS REPLAY STABIL
+[33md00e866[m UI v1.0
+[33mb3b1451[m stabil UI lama
+[33md657ce2[m Optimalisasi pergantian timeframe agar tidak lag
+[33m06d2ad1[m feat: redesign trading UI with floating panel, risk auto-lot calculation, and drawing integration
+[33m990c742[m trading engine claude/gemini sebelum revisi
+[33m7143921[m Phase 4: Trading Engine completed and margin synchronization fixes
+[33m6e21d57[m feat: drawing done
+[33m38f2194[m feat: stable drawing engine state before pointer and live-resize fixes
+[33med4141d[m feat: complete drawing engine sync, unbounded hit-test, and position tool UI
+[33m219a4f1[m feat: position tool labels adjustment and stable drawing base
+[33m5bd110a[m fix: restore clean state and unbounded drawing coordinates
+[33m2b45d60[m feat: enable unbounded drawing and fix empty area x-projection
+[33mabb1692[m feat: update drawing engine, replay features, and database management
+[33m7b57c7c[m Forex Replay hari ke 6

@@ -1,0 +1,196 @@
+.data-mgmt {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.data-mgmt__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.data-mgmt__count {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.data-mgmt__refresh {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.data-mgmt__refresh:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.data-mgmt__spin {
+  animation: data-mgmt-spin 0.8s linear infinite;
+}
+
+@keyframes data-mgmt-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.data-mgmt__list {
+  flex: 1;
+  overflow: auto;
+}
+
+.data-mgmt__row {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.data-mgmt__row-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.data-mgmt__row-header:hover {
+  background: var(--bg-hover);
+}
+
+.data-mgmt__symbol-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 110px;
+}
+
+.data-mgmt__badges {
+  display: flex;
+  gap: 4px;
+  min-width: 40px;
+}
+
+.data-mgmt__badge {
+  padding: 1px 5px;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* Day 18: Aggregated timeframe badge — slightly dimmer to distinguish from native */
+.data-mgmt__badge--agg {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.data-mgmt__meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.data-mgmt__meta--dim {
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.data-mgmt__delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.data-mgmt__delete:hover {
+  background: var(--bear-soft);
+  color: var(--bear);
+}
+
+.data-mgmt__datasets {
+  padding: 4px 10px 10px 32px;
+  background: var(--bg-panel-alt);
+}
+
+.data-mgmt__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.data-mgmt__table th {
+  text-align: left;
+  padding: 4px 8px;
+  color: var(--text-muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.data-mgmt__table td {
+  padding: 4px 8px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+
+.data-mgmt__file-name {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary) !important;
+}
+
+.data-mgmt__empty-small {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Day 19: Per-dataset delete button */
+.data-mgmt__delete-dataset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.data-mgmt__delete-dataset:hover {
+  background: var(--bear-soft);
+  color: var(--bear);
+}

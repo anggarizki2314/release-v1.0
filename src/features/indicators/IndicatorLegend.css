@@ -1,0 +1,87 @@
+/* ── Indicator Chart Legend (TradingView Plain Text Style) ── */
+.indicator-legend-container {
+  position: absolute;
+  top: 40px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 10;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.indicator-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: transparent;
+  transition: background 0.12s ease;
+  width: fit-content;
+}
+
+.indicator-legend-item:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.08));
+}
+
+.indicator-legend-item.is-disabled {
+  opacity: 0.4;
+}
+
+.indicator-legend-name {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--text-primary, #f1f5f9);
+  line-height: 1.2;
+  font-family: var(--font-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  letter-spacing: -0.01em;
+}
+
+.indicator-legend-item:hover .indicator-legend-name {
+  color: var(--text-primary, #ffffff);
+}
+
+.indicator-legend-val {
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  margin-left: 2px;
+}
+
+.indicator-legend-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  opacity: 0.8;
+  transition: opacity 0.12s ease;
+}
+
+.indicator-legend-item:hover .indicator-legend-actions {
+  opacity: 1;
+}
+
+.indicator-legend-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #787b86);
+  cursor: pointer;
+  padding: 2px 3px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.indicator-legend-btn:hover {
+  color: var(--text-primary, #ffffff);
+  background: var(--bg-hover, rgba(255, 255, 255, 0.12));
+}
+
+.indicator-legend-btn.is-del:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.18);
+}

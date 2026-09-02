@@ -1,0 +1,333 @@
+.license-gate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+.license-gate-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 30%, rgba(20, 24, 33, 0.96) 0%, rgba(10, 12, 16, 0.99) 100%);
+  backdrop-filter: blur(16px);
+}
+
+.license-gate-card {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background: #14171f;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 36px 32px 28px 32px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+  animation: licenseModalFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes licenseModalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.license-glow-1 {
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
+}
+
+.license-glow-2 {
+  position: absolute;
+  bottom: -60px;
+  left: -60px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(234, 179, 8, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
+}
+
+.license-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.license-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(59, 130, 246, 0.08) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+}
+
+.license-badge-icon {
+  color: #60a5fa;
+}
+
+.license-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px 0;
+}
+
+.license-subtitle {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin: 0;
+  padding: 0 8px;
+}
+
+.license-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.license-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  animation: licenseAlertSlide 0.2s ease-out;
+}
+
+@keyframes licenseAlertSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.license-alert.error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.license-alert.success {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+.license-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.license-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.license-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: #0f1218;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: #ffffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: center;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.license-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: #11141c;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.license-input::placeholder {
+  color: #475569;
+  letter-spacing: 0.05em;
+  font-weight: 400;
+}
+
+.license-hwid-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+}
+
+.license-hwid-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.license-hwid-icon {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.license-hwid-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.license-hwid-label {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.license-hwid-value {
+  font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.license-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.license-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.license-copy-btn.copied {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+.license-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+  margin-top: 4px;
+}
+
+.license-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 26px rgba(37, 99, 235, 0.45);
+}
+
+.license-submit-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+}
+
+.license-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.license-spin {
+  animation: licenseSpin 1s linear infinite;
+}
+
+@keyframes licenseSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.license-footer {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.license-buy-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.license-buy-link:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}

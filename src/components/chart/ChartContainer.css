@@ -1,0 +1,104 @@
+.chart-container-wrapper {
+  position: absolute;
+  inset: 0;
+}
+
+.chart-container {
+  position: absolute;
+  inset: 0;
+}
+
+/* Day 8: Timestamp preview overlay during replay selection mode */
+.chart-container__replay-preview {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  background: rgba(16, 20, 28, 0.92);
+  border: 1px solid var(--accent, #4f86f7);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-strong, #6fa0ff);
+  z-index: 10;
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+/* Day 13: Current replay date/time display — top-left overlay */
+.chart-container__replay-datetime {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(16, 20, 28, 0.88);
+  border: 1px solid var(--border-strong, #2d3648);
+  border-radius: var(--radius-sm, 4px);
+  padding: 5px 10px;
+  z-index: 10;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.chart-container__replay-datetime-time {
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #d8dce3);
+  letter-spacing: 0.4px;
+}
+
+.chart-container__replay-datetime-meta {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted, #576073);
+  letter-spacing: 0.3px;
+}
+
+/* Multi-layout Synchronized Vertical Cursor Shadow */
+.chart-cursor-shadow {
+  position: absolute;
+  top: 0;
+  bottom: 26px;
+  width: 24px;
+  pointer-events: none;
+  z-index: 38;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, rgba(79, 134, 247, 0) 0%, rgba(79, 134, 247, 0.09) 50%, rgba(79, 134, 247, 0) 100%);
+}
+
+.chart-cursor-shadow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  border-left: 1px dashed rgba(145, 185, 255, 0.8);
+  box-shadow: 0 0 8px rgba(79, 134, 247, 0.45);
+}
+
+/* Subtle Loading indicator during pan-load */
+.chart-container__loading-more {
+  position: absolute;
+  top: 10px;
+  right: 60px;
+  background: rgba(16, 20, 28, 0.85);
+  border: 1px solid rgba(79, 134, 247, 0.4);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 500;
+  color: #60a5fa;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}

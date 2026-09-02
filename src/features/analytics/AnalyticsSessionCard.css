@@ -1,0 +1,191 @@
+.ana-card {
+  background: #16181e !important;
+  border: 1px solid #242934 !important;
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  transition: border-color 0.15s ease;
+  box-shadow: none !important;
+}
+
+.ana-card:hover {
+  border-color: #2e3442 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.ana-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ana-card__badges {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ana-card__symbol {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  background: #181b22;
+  border: 1px solid #242934;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+}
+
+.ana-card__tf {
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+}
+
+.ana-card__mode {
+  font-size: 0.675rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.ana-card__mode--challenge {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.ana-card__mode--normal {
+  background: #181b22;
+  color: #94a3b8;
+  border: 1px solid #242934;
+}
+
+.ana-card__status {
+  font-size: 0.675rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.ana-card__status--passed,
+.ana-card__status--completed {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.ana-card__status--active {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.ana-card__status--failed {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+.ana-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.ana-card__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.ana-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.ana-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.775rem;
+  color: #5d6b82;
+}
+
+.ana-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.625rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid #242934;
+}
+
+.ana-card__metric-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.ana-card__metric-label {
+  font-size: 0.6875rem;
+  color: #5d6b82;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.ana-card__metric-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.ana-card__val--pos {
+  color: #4ade80;
+}
+
+.ana-card__val--neg {
+  color: #f87171;
+}
+
+.ana-card__footer {
+  padding-top: 0.75rem;
+  border-top: 1px solid #242934;
+}
+
+.ana-card__view-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #0284c7 !important;
+  color: #ffffff;
+  border: 1px solid #0369a1 !important;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: none !important;
+  transition: background-color 0.15s ease;
+}
+
+.ana-card__view-btn:hover {
+  background: #0369a1 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}

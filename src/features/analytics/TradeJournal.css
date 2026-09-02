@@ -1,0 +1,129 @@
+.trade-journal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trade-journal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.trade-journal__icon {
+  color: #38bdf8;
+}
+
+.trade-journal__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.trade-journal__table-wrap {
+  background: #181b22;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  overflow-x: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.trade-journal__table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+  min-width: 750px;
+}
+
+.trade-journal__table th {
+  padding: 12px 14px;
+  background: #1e222b;
+  color: #cbd5e1;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.trade-journal__table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  vertical-align: middle;
+}
+
+.trade-journal__table tr:hover td {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.trade-journal__table tr:last-child td {
+  border-bottom: none;
+}
+
+.journal-cell-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.journal-time {
+  font-size: 11.5px;
+  color: #f1f5f9;
+  font-weight: 500;
+}
+
+.journal-price {
+  font-size: 11px;
+  color: #94a3b8;
+  font-family: var(--font-mono, monospace);
+  font-weight: 500;
+}
+
+.journal-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.journal-badge--buy {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.journal-badge--sell {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.journal-pnl--pos {
+  color: #4ade80;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+}
+
+.journal-pnl--neg {
+  color: #f87171;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+}
+
+.journal-pnl-sub {
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+
+.journal-cell-comment {
+  font-size: 11.5px;
+  color: #cbd5e1;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

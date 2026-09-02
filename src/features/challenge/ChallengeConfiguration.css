@@ -1,0 +1,191 @@
+.challenge-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.challenge-modal {
+  width: 100%;
+  max-width: 580px;
+  background: var(--bg-secondary, #0f172a);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 20px;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: challenge-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes challenge-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.challenge-modal__header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+}
+
+.challenge-modal__title-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.challenge-modal__icon {
+  color: #fbbf24;
+  margin-top: 0.2rem;
+}
+
+.challenge-modal__header h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text-primary, #f8fafc);
+  margin: 0 0 0.25rem 0;
+}
+
+.challenge-modal__sub {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #94a3b8);
+  margin: 0;
+}
+
+.challenge-modal__body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.challenge-field-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.challenge-field-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.challenge-field-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  text-transform: uppercase;
+}
+
+.challenge-tooltip {
+  color: var(--text-secondary, #64748b);
+  cursor: help;
+}
+
+.challenge-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.challenge-input {
+  width: 100%;
+  padding: 0.65rem 2rem 0.65rem 0.875rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  color: var(--text-primary, #f8fafc);
+  font-size: 1rem;
+  font-weight: 800;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.challenge-input:focus {
+  border-color: #fbbf24;
+}
+
+.challenge-unit {
+  position: absolute;
+  right: 0.875rem;
+  font-weight: 700;
+  color: var(--text-secondary, #64748b);
+}
+
+.challenge-calc-text {
+  font-size: 0.725rem;
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.challenge-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.875rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 10px;
+  color: #fbbf24;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.challenge-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+}
+
+.challenge-btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.challenge-btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.35rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s ease;
+}
+
+.challenge-btn-primary:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}

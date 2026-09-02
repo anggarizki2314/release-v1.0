@@ -1,0 +1,178 @@
+================================================================================
+                    PANDUAN LENGKAP PENGGUNAAN TRADEPRO
+        Software Market Replay & Backtest Forex / Gold No. 1 di Desktop
+================================================================================
+
+Halo Trader! Selamat datang di TradePro.
+TradePro adalah aplikasi desktop profesional untuk latihan trading, market replay,
+dan backtest strategi trading secara offline tanpa perlu langganan bulanan mahal.
+
+--------------------------------------------------------------------------------
+1. CARA INSTALLASI DAN MEMULAI
+--------------------------------------------------------------------------------
+1. Jalankan file installer: "TradePro Setup x.x.x.exe".
+2. Aplikasi akan otomatis terinstall dan membuat shortcut "TradePro" di Desktop Anda.
+3. Buka aplikasi TradePro.
+
+--------------------------------------------------------------------------------
+2. CARA DOWNLOAD DATA & IMPORT HISTORICAL DATA
+--------------------------------------------------------------------------------
+TradePro bekerja 100% offline dengan data historis nyata berkualitas tinggi.
+
+CARA A: Unduh Data Otomatis (Dukascopy Feed)
+1. Di halaman Beranda, buka menu "Data Hub".
+2. Pilih Simbol / Pair yang diinginkan (contoh: XAUUSD, EURUSD, GBPUSD, USDJPY, dll).
+3. Tentukan Rentang Tanggal (Start Date s/d End Date) yang ingin diunduh.
+4. Klik tombol "Download Data".
+5. TradePro akan mengunduh data 1-Minute (M1) historis presisi tinggi dan
+   menyimpannya langsung ke database lokal di laptop/PC Anda secara permanen.
+
+CARA B: Import Data Sendiri (File CSV)
+1. Jika Anda memiliki data dari broker / platform lain (format CSV), klik "Import CSV" di menu Data Hub.
+2. Pilih file CSV Anda, sesuaikan format kolom (Time, Open, High, Low, Close, Volume).
+3. Klik "Import", data akan otomatis masuk ke database TradePro.
+
+--------------------------------------------------------------------------------
+3. CARA GENERATE TIMEFRAME (M1 KE M5, M15, H1, H4, D1)
+--------------------------------------------------------------------------------
+Setelah data M1 berhasil diunduh, Anda dapat menghasilkan seluruh timeframe
+standar dan kustom:
+1. Di menu "Data Hub", temukan pair yang sudah memiliki data M1.
+2. Klik tombol "Generate Timeframes" (atau "Bangun Timeframe").
+3. TradePro akan secara otomatis dan super cepat mengagregasi data candle M1 menjadi
+   M5, M15, M30, H1, H4, dan D1 dengan akurasi harga 100% presisi.
+4. Setelah proses selesai, seluruh timeframe siap digunakan di chart dan replay.
+
+* TIPS: JIKA ADA CANDLE YANG HILANG ATAU GAP DATA DI CHART:
+  - Buka menu "Data Hub" -> Klik tombol "Regenerate Timeframes" pada pair tersebut
+    untuk membangun ulang seluruh agregasi candle dari data M1 master.
+  - Jika tanggal tertentu belum terunduh, lakukan download ulang untuk rentang
+    tanggal tersebut di menu Data Hub.
+  - Catatan: Pasar Forex & Emas tutup pada hari Sabtu dan Minggu (Weekend Gap),
+    sehingga tidak adanya candle di akhir pekan adalah kondisi normal pasar nyata.
+
+--------------------------------------------------------------------------------
+4. CARA MEMBUAT & MENGGUNAKAN CUSTOM TIMEFRAME (M3, 2H, 8H, DLL)
+--------------------------------------------------------------------------------
+TradePro mendukung timeframe unik yang tidak ada di platform trading biasa
+(sangat disukai trader ICT, SMC, dan Scalper):
+1. Buka Chart Workspace.
+2. Di pojok kiri atas chart (pada tombol pilihan Timeframe), klik ikon Dropdown (▼).
+3. Klik "+ Add Custom Timeframe" (atau ketik langsung angka timeframe).
+4. Masukkan angka dan satuan:
+   - Contoh Menit: ketik "3" pilih "Menit" -> akan menghasilkan timeframe "3m" (M3).
+   - Contoh Jam   : ketik "2" pilih "Jam"   -> akan menghasilkan timeframe "2H" (H2).
+   - Contoh Hari  : ketik "2" pilih "Hari"  -> akan menghasilkan timeframe "2D" (D2).
+5. Klik "Add" / "Gunakan".
+6. Timeframe kustom akan langsung aktif di chart dan dapat Anda klik ikon Bintang (⭐)
+   untuk menjadikannya Timeframe Favorit di bar atas chart!
+
+--------------------------------------------------------------------------------
+5. CARA MEMBUAT SESI BACKTEST BARU
+--------------------------------------------------------------------------------
+1. Di halaman Beranda / Sessions, klik tombol "+ Create Session" (atau "New Session").
+2. Pilih Mode Sesi:
+   - Mode Normal (Practice): Latihan bebas tanpa batasan aturan.
+   - Mode Prop Firm Challenge: Simulasi evaluasi akun didanai (FTMO, FundedNext, dll)
+     dengan aturan batas rugi harian (Daily Loss Limit) dan target profit.
+3. Pilih Simbol / Pair yang ingin Anda uji (misal: XAUUSD / Emas, EURUSD, GBPUSD).
+   * Anda juga dapat memilih beberapa pair sekaligus untuk multi-chart backtest.
+4. Tentukan Saldo Awal (misal: $10,000 atau $100,000) dan Leverage (misal: 1:100).
+5. Pilih Tanggal & Waktu Mulai Replay (sesuai data yang sudah Anda unduh).
+6. Klik "Start Session" untuk masuk ke layar chart utama.
+
+--------------------------------------------------------------------------------
+6. MENGGUNAKAN KONTROL MARKET REPLAY
+--------------------------------------------------------------------------------
+Di bagian atas chart, Anda akan melihat kontrol Replay Bar:
+- Tombol Play (Segitiga) : Menjalankan candle secara otomatis.
+- Tombol Pause (Garis 2) : Menghentikan pergerakan candle sementara.
+- Tombol Step Forward (>|): Memajukan candle 1 per 1 langkah (sangat cocok untuk
+  mengamati reaksi harga di level Support/Resistance/Supply Demand).
+- Kecepatan (Speed)      : Atur kecepatan dari 0.5x, 1x, 2x, 5x, hingga 10x.
+- Timeframe Replay       : Pilih resolusi langkah candle (1m, 3m, 5m, 15m, 1H, dll).
+- Jump Sesi              : Fitur kilat untuk langsung melompati waktu ke pembukaan
+  sesi trading penting (Asia Killzone, London Open, New York Open).
+
+--------------------------------------------------------------------------------
+7. FITUR MULTI-LAYOUT & MULTI-TIMEFRAME
+--------------------------------------------------------------------------------
+TradePro mendukung tampilan multi-chart secara bersamaan dan tersinkronisasi:
+1. Klik menu "Layout" di bar atas.
+2. Pilih mode layout yang diinginkan:
+   - 1 Chart (Single Layout)
+   - 2 Chart Vertikal (Bisa H1 di kiri & M5 di kanan untuk analisa top-down)
+   - 2 Chart Horizontal
+   - 3 atau 4 Chart Split
+3. Setiap pane chart dapat diatur timeframe dan pair-nya secara independen, dan
+   waktu replay akan berjalan sinkron di seluruh chart!
+
+--------------------------------------------------------------------------------
+8. CARA MELAKUKAN OPEN POSISI (TRADING)
+--------------------------------------------------------------------------------
+Terdapat 2 cara mudah untuk entry posisi:
+
+CARA A: Menggunakan Tool Gambar (Long / Short Position Tool) [DIREKOMENDASIKAN]
+1. Di toolbar sebelah kiri, pilih tool "Long Position" (untuk BUY) atau
+   "Short Position" (untuk SELL).
+2. Klik pada chart di mana Anda ingin entry.
+3. Tarik kotak hijau untuk target Take Profit (TP) dan kotak merah untuk Stop Loss (SL).
+4. Di bar atas, tombol akan otomatis berubah menjadi "Place Order (BUY)" atau
+   "Place Order (SELL)".
+5. Klik tombol tersebut -> Masukkan ukuran Lot atau persentase Risk (%) -> Klik Confirm.
+6. Garis order resmi beserta garis SL & TP akan langsung terpasang di chart!
+
+CARA B: Melalui Tombol "Place Order" Langsung
+1. Klik tombol "Place Order" di bar atas.
+2. Pilih Tipe Order:
+   - Market Order: BUY Market / SELL Market (eksekusi langsung di harga running).
+   - Pending Order: BUY Limit / SELL Limit / BUY Stop / SELL Stop.
+3. Masukkan Volume Lot, harga Entry, Stop Loss, dan Take Profit.
+4. Klik "Confirm Order".
+
+--------------------------------------------------------------------------------
+9. MENGELOLA POSISI (MODIFY, BEP, CLOSE MANUAL)
+--------------------------------------------------------------------------------
+Buka panel bawah pada tab "Positions":
+- Tombol "BEP" (Break Even Point): Langsung memindahkan Stop Loss ke harga Entry
+  agar posisi Anda bebas risiko (Risk-Free).
+- Tombol "Modify": Mengubah level SL, TP, atau Volume kapan saja.
+- Tombol "Close" (X): Menutup posisi secara manual di harga pasar saat ini.
+- Kamera (Screenshot): Mengambil tangkapan layar otomatis untuk jurnal posisi Anda.
+
+--------------------------------------------------------------------------------
+10. ANALYTICS, JURNAL TRADING, & STATISTIK
+--------------------------------------------------------------------------------
+1. Klik logo "TradePro" di kiri atas -> Pilih "Analytics & Jurnal".
+2. Anda dapat melihat performa trading Anda secara mendalam:
+   - Win Rate (%) & Total Profit/Loss ($)
+   - Profit Factor & Average Risk-Reward Ratio (RRR)
+   - Maximum Drawdown (DD) & Equity Curve
+   - Distribusi Trade per Sesi & Hari
+3. Seluruh trade yang Anda lakukan tersimpan permanen di database lokal laptop/PC
+   Anda, sehingga Anda bisa keluar aplikasi dan melanjutkannya kapan saja!
+
+--------------------------------------------------------------------------------
+11. SHORTCUT KEYBOARD CEPAT
+--------------------------------------------------------------------------------
+- Spacebar           : Play / Pause Replay
+- Panah Kanan (->)   : Step Forward 1 Candle
+- Escape (Esc)       : Batalkan tool gambar aktif / Tutup modal
+- Ctrl + S           : Simpan progres sesi
+
+--------------------------------------------------------------------------------
+12. TIPS BACKTEST YANG EFEKTIF
+--------------------------------------------------------------------------------
+1. Buat trading plan sebelum memulai backtest (misal: hanya entry di London Session).
+2. Selalu gunakan Stop Loss dan hitung risiko per trade (misal 1% per posisi).
+3. Evaluasi statistik di tab Analytics setiap selesai 20-50 trade untuk melihat
+   konsistensi strategi Anda.
+
+--------------------------------------------------------------------------------
+Ada pertanyaan, kendala, atau request fitur?
+Hubungi kami melalui:
+Instagram : @ngooy_ (https://instagram.com/ngooy_)
+TikTok    : Hubungi lewat DM / Profil kami
+
+Selamat berlatih dan semoga konsisten profit bersama TradePro!
+================================================================================

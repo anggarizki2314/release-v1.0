@@ -1,0 +1,454 @@
+/* ─── TradingView Pixel-Perfect Fibonacci Settings Modal ─── */
+
+.fib-tv-modal {
+  width: 380px !important;
+  max-width: 95vw;
+  max-height: 90vh;
+  background: #1e222d;
+  border: 1px solid #2a2e39;
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  color: #d1d4dc;
+  font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.fib-modal-scrollable {
+  max-height: 65vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px;
+  box-sizing: border-box;
+}
+
+/* Webkit Scrollbar */
+.fib-modal-scrollable::-webkit-scrollbar {
+  width: 4px;
+}
+
+.fib-modal-scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fib-modal-scrollable::-webkit-scrollbar-thumb {
+  background: #2a2e39;
+  border-radius: 2px;
+}
+
+.fib-modal-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #363c4e;
+}
+
+.fib-corak-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gann-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #787b86;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+/* ── Form Rows ── */
+.tv-form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.tv-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #d1d4dc;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tv-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #131722;
+  border: 1px solid #434651;
+  border-radius: 3px;
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition: all 120ms ease;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.tv-checkbox:hover {
+  border-color: #787b86;
+}
+
+.tv-checkbox:checked {
+  background: #2962ff;
+  border-color: #2962ff;
+}
+
+.tv-checkbox:checked::before {
+  content: "";
+  width: 7px;
+  height: 4px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+.tv-form-label {
+  font-size: 13px;
+  color: #d1d4dc;
+  white-space: nowrap;
+}
+
+.tv-control-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ─── TV Exact Pill & Line Control Boxes ─── */
+
+.tv-tv-combo-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e222d;
+  border: 1px solid #434651;
+  border-radius: 4px;
+  padding: 3px 8px 3px 4px;
+  height: 30px;
+  box-sizing: border-box;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 120ms;
+}
+
+.tv-tv-combo-box:hover {
+  border-color: #787b86;
+}
+
+.tv-color-swatch-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.tv-color-swatch-box .color-picker {
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.tv-color-swatch-box .color-picker__swatch {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+}
+
+.tv-line-style-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #ffffff;
+  font-family: monospace;
+  font-size: 13px;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.tv-line-style-overlay-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.tv-line-btn-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e222d;
+  border: 1px solid #434651;
+  border-radius: 4px;
+  height: 30px;
+  box-sizing: border-box;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 120ms;
+}
+
+.tv-line-btn-wrap:hover {
+  border-color: #787b86;
+}
+
+.tv-line-btn-style {
+  width: 68px;
+}
+
+.tv-line-btn-preview {
+  color: #d1d4dc;
+  font-family: monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  pointer-events: none;
+}
+
+.tv-line-btn-width {
+  width: 42px;
+}
+
+.tv-line-thickness-bar {
+  width: 22px;
+  background: #d1d4dc;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+/* ── Selects ── */
+.tv-select {
+  height: 30px;
+  background: #1e222d;
+  border: 1px solid #434651;
+  border-radius: 4px;
+  color: #d1d4dc;
+  font-size: 13px;
+  font-family: inherit;
+  padding: 0 22px 0 10px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='none' stroke='%23787b86' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color 120ms;
+  box-sizing: border-box;
+}
+
+.tv-select:focus,
+.tv-select:hover {
+  border-color: #787b86;
+}
+
+.tv-select--wide {
+  width: 140px !important;
+}
+
+.tv-select--align {
+  width: 85px !important;
+}
+
+.tv-divider {
+  height: 1px;
+  background: #2a2e39;
+  margin: 4px 0;
+}
+
+/* ── 2-Column Grid of 24 Levels ── */
+.fib-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 2px 0;
+  box-sizing: border-box;
+}
+
+.fib-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fib-grid-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  min-width: 0;
+}
+
+.fib-val-input {
+  width: 54px !important;
+  min-width: 44px !important;
+  max-width: 60px !important;
+  height: 26px !important;
+  background: #131722;
+  border: 1px solid #363c4e;
+  border-radius: 4px;
+  color: #d1d4dc;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+  padding: 0 4px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 120ms, color 120ms;
+}
+
+.fib-val-input:focus {
+  border-color: #2962ff;
+}
+
+.fib-val-input--dimmed {
+  color: #787b86;
+  border-color: #2a2e39;
+}
+
+/* ── Color Picker Trigger in Grid ── */
+.fib-grid-cell .color-picker {
+  flex-shrink: 0;
+}
+
+/* ── Blue Opacity Slider Track ── */
+.fib-slider-track-wrap {
+  width: 120px;
+  display: flex;
+  align-items: center;
+}
+
+.fib-opacity-slider {
+  width: 100%;
+  height: 5px;
+  -webkit-appearance: none;
+  background: linear-gradient(90deg, rgba(41, 98, 255, 0.1) 0%, #2962ff 100%);
+  border-radius: 3px;
+  outline: none;
+}
+
+.fib-opacity-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #2962ff;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Diagonal Swatch for Single Color ── */
+.fib-single-color-wrap {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Modal Footer ── */
+.tv-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid #2a2e39;
+  background: #1e222d;
+  border-radius: 0 0 8px 8px;
+}
+
+.tv-modal-footer-left {
+  position: relative;
+}
+
+.tv-modal-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tv-btn {
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 120ms, border-color 120ms;
+}
+
+.tv-btn-secondary {
+  background: #1e222d;
+  border-color: #434651;
+  color: #d1d4dc;
+}
+
+.tv-btn-secondary:hover {
+  background: #2a2e39;
+  border-color: #787b86;
+}
+
+.tv-btn-cancel {
+  background: #1e222d;
+  border-color: #434651;
+  color: #d1d4dc;
+}
+
+.tv-btn-cancel:hover {
+  background: #2a2e39;
+  border-color: #787b86;
+}
+
+.tv-btn-ok {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #131722;
+  font-weight: 600;
+}
+
+.tv-btn-ok:hover {
+  background: #e0e3eb;
+}
+
+.tv-template-dropdown {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  width: 150px;
+  background: #1e222d;
+  border: 1px solid #363c4e;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  padding: 4px 0;
+  z-index: 100;
+}
+
+.tv-template-item {
+  padding: 7px 10px;
+  font-size: 12.5px;
+  color: #d1d4dc;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.tv-template-item:hover {
+  background: #2a2e39;
+  color: #ffffff;
+}

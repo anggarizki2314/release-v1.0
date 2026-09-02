@@ -1,0 +1,264 @@
+/* Trading Engine 2.0 — TradingTables Styling */
+
+.te2-table-container {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', Roboto, sans-serif;
+  font-size: 12px;
+  color: var(--text-primary, #cbd5e1);
+  background: var(--bg-panel, #0f172a);
+}
+
+.te2-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.te2-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-panel);
+  backdrop-filter: blur(4px);
+  padding: 8px 12px;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted, #64748b);
+  border-bottom: 1px solid var(--border-subtle);
+  z-index: 2;
+}
+
+.te2-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.te2-table tr {
+  transition: background 0.12s ease;
+}
+
+.te2-table tr:hover {
+  background: var(--bg-active, rgba(255, 255, 255, 0.04));
+}
+
+.te2-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.te2-badge.buy {
+  background: rgba(37, 99, 235, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+}
+
+.te2-badge.sell {
+  background: rgba(242, 54, 69, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(242, 54, 69, 0.4);
+}
+
+.te2-badge.pending {
+  background: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.te2-badge.filled,
+.te2-badge.open {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.te2-badge.closed {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.4);
+}
+
+.te2-table td.te2-pnl-positive,
+.te2-pnl-positive,
+.te2-account-val.pos {
+  color: #22c55e !important;
+  font-weight: 700;
+}
+
+.te2-table td.te2-pnl-negative,
+.te2-pnl-negative,
+.te2-account-val.neg {
+  color: #ef4444 !important;
+  font-weight: 700;
+}
+
+.te2-table td.te2-pnl-zero,
+.te2-pnl-zero {
+  color: var(--text-secondary, #94a3b8) !important;
+  font-weight: 600;
+}
+
+.te2-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.te2-btn-modify {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 10;
+  transition: all 0.15s ease;
+}
+
+.te2-btn-modify:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.te2-btn-bep {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 10;
+  transition: all 0.15s ease;
+}
+
+.te2-btn-bep:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: #fbbf24;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+.te2-btn-bep:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.te2-btn-cancel {
+  background: rgba(242, 54, 69, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(242, 54, 69, 0.3);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 10;
+  transition: all 0.15s ease;
+}
+
+.te2-btn-cancel:hover {
+  background: rgba(242, 54, 69, 0.3);
+  color: #ffffff;
+}
+
+/* Account Engine Summary Strip Binding */
+.te2-account-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 8px 14px;
+  background: rgba(15, 23, 42, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+}
+
+.te2-account-metric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.te2-account-label {
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+}
+
+.te2-account-val {
+  color: #f1f5f9;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.te2-account-val.pos {
+  color: #34d399;
+}
+
+.te2-account-val.neg {
+  color: #f87171;
+}
+
+/* Challenge Engine Badge Colors */
+.te2-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.te2-status-badge.running {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.te2-status-badge.passed {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.te2-status-badge.failed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.te2-status-badge.normal {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
