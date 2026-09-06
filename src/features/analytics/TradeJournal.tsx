@@ -1,17 +1,49 @@
 import React, { useState, useMemo } from 'react';
-import { BookOpen, Search, ArrowUpDown } from 'lucide-react';
+import { BookOpen, Search, FileText, Edit3, Sparkles } from 'lucide-react';
 import type { HistoryState } from '../trading2/store/TradingStoreTypes';
+import { tradingEngine } from '../trading2/TradingEngineService';
+import { loadTradingState, loadTradingStateSync, saveTradingState } from '../backtest/sessionRepository';
+import { AICoachModal } from './AICoachModal';
 import { formatSignedCurrency } from '@/utils/formatters';
 import './TradeJournal.css';
 
 interface TradeJournalProps {
   trades: HistoryState[];
+  sessionId?: string;
 }
 
-export const TradeJournal: React.FC<TradeJournalProps> = ({ trades }) => {
+export function getTradeCloseReason(t: HistoryState): 'SL' | 'TP' | 'MANUAL' {
+  if (t.closeReason) {
+    if (t.closeReason === 'SL' || t.closeReason.includes('SL')) return 'SL';
+    if (t.closeReason === 'TP' || t.closeReason.includes('TP')) return 'TP';
+    return 'MANUAL';
+  }
+  if (t.tradeId?.includes('TP') || t.comment?.includes('TP')) return 'TP';
+  if (t.tradeId?.includes('SL') || t.comment?.includes('SL')) return 'SL';
+  return 'MANUAL';
+}
+
+export function cleanUserNote(rawComment: string | null | undefined): string {
+  if (!rawComment) return '';
+  const trimmed = rawComment.trim();
+  if (trimmed === 'SL Hit' || trimmed === 'SL' || trimmed === 'TP Hit' || trimmed === 'TP' || trimmed === 'MANUAL_CLOSE' || trimmed === 'MANUAL') {
+    return '';
+  }
+  return trimmed.replace(/\s*\((SL Hit|TP Hit|Manual Close)\)$/i, '').trim();
+}
+
+export const TradeJournal: React.FC<TradeJournalProps> = ({ trades, sessionId }) => {
   const [search, setSearch] = useState('');
   const [directionFilter, setDirectionFilter] = useState<'ALL' | 'BUY' | 'SELL'>('ALL');
   const [viewImageUrl, setViewImageUrl] = useState<string | null>(null);
+
+  const [editingTradeId, setEditingTradeId] = useState<string | null>(null);
+  const [editingNote, setEditingNote] = useState<string>('');
+  const [localComments, setLocalComments] = useState<Record<string, string>>({});
+
+  // AI Review Modal State
+  const [selectedAiTrade, setSelectedAiTrade] = useState<HistoryState | null>(null);
+  const [showAiModal, setShowAiModal] = useState<boolean>(false);
 
   const filteredTrades = useMemo(() => {
     return trades.filter((t) => {
@@ -19,12 +51,13 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({ trades }) => {
       if (search.trim()) {
         const q = search.toLowerCase();
         const sym = (t.symbol || '').toLowerCase();
-        const comment = (t.comment || '').toLowerCase();
-        return sym.includes(q) || comment.includes(q);
+        const userNote = cleanUserNote(localComments[t.tradeId] ?? t.comment).toLowerCase();
+        const reason = getTradeCloseReason(t).toLowerCase();
+        return sym.includes(q) || userNote.includes(q) || reason.includes(q);
       }
       return true;
     });
-  }, [trades, search, directionFilter]);
+  }, [trades, search, directionFilter, localComments]);
 
   const formatDateTime = (timestampMs: number) => {
     if (!timestampMs) return '-';
@@ -41,6 +74,47 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({ trades }) => {
     const diffHour = Math.floor(diffMin / 60);
     const remMin = diffMin % 60;
     return `${diffHour}h ${remMin}m`;
+  };
+
+  const handleStartEdit = (tradeId: string, currentNote: string) => {
+    setEditingTradeId(tradeId);
+    setEditingNote(cleanUserNote(currentNote));
+  };
+
+  const handleSaveNoteDirect = async (tradeId: string, noteToSave: string) => {
+    const cleanNote = cleanUserNote(noteToSave);
+
+    setLocalComments((prev) => ({ ...prev, [tradeId]: cleanNote }));
+
+    // Sync to TradingEngineService
+    tradingEngine.updateHistoryComment(tradeId, cleanNote);
+
+    // If session is specified, persist to disk/db
+    if (sessionId) {
+      try {
+        const state = (await loadTradingState(sessionId)) || loadTradingStateSync(sessionId);
+        if (state?.schema?.history) {
+          const item = state.schema.history.find((h: any) => h.tradeId === tradeId);
+          if (item) {
+            item.comment = cleanNote || null;
+            await saveTradingState(sessionId, state);
+          }
+        }
+      } catch (err) {
+        console.warn('[TradeJournal] Persist comment failed:', err);
+      }
+    }
+
+    window.dispatchEvent(new CustomEvent('show-toast', { detail: '📝 Catatan jurnal tersimpan!' }));
+  };
+
+  const handleSaveNote = async (tradeId: string) => {
+    await handleSaveNoteDirect(tradeId, editingNote);
+    setEditingTradeId(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTradeId(null);
   };
 
   return (
@@ -74,7 +148,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({ trades }) => {
           <div style={{ position: 'relative' }}>
             <input
               type="text"
-              placeholder="Search symbol / comment..."
+              placeholder="Search symbol / notes..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{
@@ -84,7 +158,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({ trades }) => {
                 fontSize: '11px',
                 padding: '4px 8px',
                 borderRadius: '6px',
-                width: '160px',
+                width: '180px',
               }}
             />
           </div>
@@ -107,13 +181,15 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({ trades }) => {
                 <th>Net Realized PnL</th>
                 <th>Duration</th>
                 <th>Screenshots</th>
-                <th>Close Reason / Comment</th>
+                <th>Close Reason & Notes</th>
               </tr>
             </thead>
             <tbody>
               {filteredTrades.map((trd) => {
                 const netProfit = Number(trd.profit || 0) - Number(trd.commission || 0) + Number(trd.swap || 0);
                 const isWin = netProfit >= 0;
+                const reason = getTradeCloseReason(trd);
+                const userNote = cleanUserNote(localComments[trd.tradeId] ?? trd.comment);
 
                 return (
                   <tr key={trd.tradeId}>
@@ -172,7 +248,94 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({ trades }) => {
                         )}
                       </div>
                     </td>
-                    <td className="journal-cell-comment">{trd.comment || 'MANUAL_CLOSE'}</td>
+                    <td className="journal-comment-cell">
+                      {editingTradeId === trd.tradeId ? (
+                        <div className="journal-note-editor" onClick={(e) => e.stopPropagation()}>
+                          <textarea
+                            className="journal-note-input"
+                            value={editingNote}
+                            maxLength={200}
+                            autoFocus
+                            placeholder="Tulis refleksi / catatan trade ini..."
+                            onChange={(e) => setEditingNote(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                                handleSaveNote(trd.tradeId);
+                              } else if (e.key === 'Escape') {
+                                handleCancelEdit();
+                              }
+                            }}
+                          />
+                          <div className="journal-note-actions">
+                            <button
+                              type="button"
+                              className="journal-note-btn cancel"
+                              onClick={handleCancelEdit}
+                            >
+                              Batal
+                            </button>
+                            <button
+                              type="button"
+                              className="journal-note-btn save"
+                              onClick={() => handleSaveNote(trd.tradeId)}
+                            >
+                              Simpan Note
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="journal-comment-block">
+                          {/* Reason Badge & AI Review Trigger (Independent of User Note) */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span
+                              className={`journal-reason-badge ${
+                                reason === 'SL'
+                                  ? 'journal-reason-badge--sl'
+                                  : reason === 'TP'
+                                  ? 'journal-reason-badge--tp'
+                                  : 'journal-reason-badge--manual'
+                              }`}
+                            >
+                              {reason === 'SL' ? 'SL Hit' : reason === 'TP' ? 'TP Hit' : 'Manual Close'}
+                            </span>
+
+                            <button
+                              type="button"
+                              className="journal-ai-review-btn"
+                              onClick={() => {
+                                setSelectedAiTrade(trd);
+                                setShowAiModal(true);
+                              }}
+                              title="Minta AI mengevaluasi trade ini (termasuk visual screenshot chart jika ada)"
+                            >
+                              <Sparkles size={10} />
+                              <span>AI Review</span>
+                            </button>
+                          </div>
+
+                          {/* Custom User Note */}
+                          {userNote ? (
+                            <div
+                              className="journal-note-bubble"
+                              onClick={() => handleStartEdit(trd.tradeId, userNote)}
+                              title="Klik untuk mengedit catatan jurnal"
+                            >
+                              <FileText size={12} className="journal-note-icon" />
+                              <span className="journal-note-text">{userNote}</span>
+                            </div>
+                          ) : (
+                            <div
+                              className="journal-note-placeholder"
+                              onClick={() => handleStartEdit(trd.tradeId, '')}
+                              title="Klik untuk menambah catatan jurnal"
+                            >
+                              <Edit3 size={11} />
+                              <span>+ Catatan</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -208,6 +371,26 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({ trades }) => {
           </button>
         </div>
       )}
+
+      {/* AI Trade Review Modal */}
+      <AICoachModal
+        isOpen={showAiModal}
+        onClose={() => {
+          setShowAiModal(false);
+          setSelectedAiTrade(null);
+        }}
+        mode="trade"
+        trade={selectedAiTrade}
+        onAppendNote={(aiText) => {
+          if (selectedAiTrade) {
+            const current = cleanUserNote(localComments[selectedAiTrade.tradeId] ?? selectedAiTrade.comment);
+            const firstLines = aiText.split('\n').filter((l: string) => l.trim().length > 0).slice(0, 3).join(' ');
+            const shortInsight = `[AI: ${firstLines.replace(/#/g, '').slice(0, 150)}...]`;
+            const updated = current ? `${current}\n\n${shortInsight}` : shortInsight;
+            handleSaveNoteDirect(selectedAiTrade.tradeId, updated);
+          }
+        }}
+      />
     </div>
   );
 };

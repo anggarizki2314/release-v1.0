@@ -92,16 +92,31 @@ export function getUtcOffsetMinutes(timezone: string, utcSeconds: number): numbe
   }
 }
 
+export const DAY_NAMES_ID: Record<string, string> = {
+  Sun: 'Min',
+  Mon: 'Sen',
+  Tue: 'Sel',
+  Wed: 'Rab',
+  Thu: 'Kam',
+  Fri: 'Jum',
+  Sat: 'Sab',
+};
+
 /**
  * Format a UTC timestamp in a given timezone.
- * Returns formatted string like "2024-01-03 18:39".
+ * Returns formatted string like "2024-01-03 18:39" (or "Rab, 2024-01-03 18:39" if includeDay is true).
  */
-export function formatTimestampInTimezone(utcSeconds: number, timezone: string): string {
+export function formatTimestampInTimezone(
+  utcSeconds: number,
+  timezone: string,
+  includeDay: boolean = false
+): string {
   if (utcSeconds === null || utcSeconds === undefined || isNaN(utcSeconds)) return '—';
   const date = new Date(utcSeconds * 1000);
   try {
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
+      weekday: 'short',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -111,25 +126,35 @@ export function formatTimestampInTimezone(utcSeconds: number, timezone: string):
     });
     const parts = formatter.formatToParts(date);
     const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '00';
+    const rawWeekday = parts.find((p) => p.type === 'weekday')?.value;
+    const weekday = rawWeekday ? (DAY_NAMES_ID[rawWeekday] || rawWeekday) : '';
     const year = get('year');
     const month = get('month');
     const day = get('day');
     let hour = get('hour');
     if (hour === '24') hour = '00';
     const minute = get('minute');
-    return `${year}-${month}-${day} ${hour}:${minute}`;
+    const prefix = includeDay && weekday ? `${weekday}, ` : '';
+    return `${prefix}${year}-${month}-${day} ${hour}:${minute}`;
   } catch {
     return formatTimestampUTC(utcSeconds);
   }
 }
 
 /**
- * Parse a local date/time string (e.g. "2024-01-03 18:39" or "2024-01-03") in a given IANA timezone
+ * Format a UTC timestamp with Indonesian day of week (e.g. "Rab, 2024-01-03 18:39").
+ */
+export function formatTimestampWithDayInTimezone(utcSeconds: number, timezone: string): string {
+  return formatTimestampInTimezone(utcSeconds, timezone, true);
+}
+
+/**
+ * Parse a local date/time string (e.g. "2024-01-03 18:39", "Rab, 2024-01-03 18:39", or "2024-01-03") in a given IANA timezone
  * and return the corresponding UTC unix timestamp in seconds.
  * Calculates DST offset at the specified target instant.
  */
 export function parseDateTimeInTimezone(dateTimeStr: string, timezone: string): number {
-  const normalized = dateTimeStr.trim().replace('T', ' ').replace('Z', '');
+  const normalized = dateTimeStr.trim().replace('T', ' ').replace('Z', '').replace(/^[A-Za-z]{3,6},?\s*/, '');
   const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?$/);
   if (!match) {
     throw new Error(`Invalid date format "${dateTimeStr}", expected YYYY-MM-DD [HH:MM[:SS]]`);
@@ -256,20 +281,24 @@ export function formatTickMark(
     const minutes = getPart('minute');
     const seconds = getPart('second');
 
+    const weekdayFmt = new Intl.DateTimeFormat('en-US', { timeZone: timezone, weekday: 'short' });
+    const rawWeekday = weekdayFmt.format(date);
+    const weekday = DAY_NAMES_ID[rawWeekday] || rawWeekday;
+
     // TickMarkType: 0=Year, 1=Month, 2=DayOfMonth, 3=Time, 4=TimeWithSeconds
     switch (tickMarkType) {
       case 0: // Year
         return `${year}`;
       case 1: // Month
         return `${year}-${String(month).padStart(2, '0')}`;
-      case 2: // Day
-        return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      case 2: // Day (e.g. Sen 13)
+        return `${weekday} ${String(day).padStart(2, '0')}`;
       case 3: // Time (HH:MM)
         return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
       case 4: // TimeWithSeconds (HH:MM:SS)
         return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
       default:
-        return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        return `${weekday} ${String(day).padStart(2, '0')}`;
     }
   } catch {
     // Fallback to UTC

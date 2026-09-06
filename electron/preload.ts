@@ -140,6 +140,18 @@ const api = {
     ipcRenderer.invoke('license:getHwid'),
   deactivateLicense: (): Promise<boolean> =>
     ipcRenderer.invoke('license:deactivate'),
+
+  // Gemini AI Request Bridge
+  geminiRequest: (params: { prompt: string; images?: string[]; apiKey: string; model: string }): Promise<string> =>
+    ipcRenderer.invoke('ai:geminiRequest', params),
+
+  // OpenAI / 9Router Request Bridge
+  openAiRequest: (params: { url: string; apiKey?: string; model: string; messages: any[] }): Promise<string> =>
+    ipcRenderer.invoke('ai:openAiRequest', params),
+
+  // 9Router Fetch Models Bridge
+  getModelsList: (params: { url: string; apiKey?: string }): Promise<any[]> =>
+    ipcRenderer.invoke('ai:fetchModels', params),
 };
 
 contextBridge.exposeInMainWorld('forexReplay', api);

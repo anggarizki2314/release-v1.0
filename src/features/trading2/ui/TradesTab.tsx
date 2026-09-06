@@ -18,6 +18,44 @@ export const TradesTab: React.FC = () => {
   );
   const [viewImageUrl, setViewImageUrl] = useState<string | null>(null);
   const [pendingScreenshot, setPendingScreenshot] = useState<{ tradeId: string, dataUrl: string, timeframe: string } | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentVal, setEditingCommentVal] = useState<string>('');
+
+  const getTradeCloseReason = (t: HistoryState): 'SL' | 'TP' | 'MANUAL' => {
+    if (t.closeReason) {
+      if (t.closeReason === 'SL' || t.closeReason.includes('SL')) return 'SL';
+      if (t.closeReason === 'TP' || t.closeReason.includes('TP')) return 'TP';
+      return 'MANUAL';
+    }
+    if (t.tradeId?.includes('TP') || t.comment?.includes('TP')) return 'TP';
+    if (t.tradeId?.includes('SL') || t.comment?.includes('SL')) return 'SL';
+    return 'MANUAL';
+  };
+
+  const cleanUserNote = (comment: string | null | undefined): string => {
+    if (!comment) return '';
+    const trimmed = comment.trim();
+    if (trimmed === 'SL Hit' || trimmed === 'SL' || trimmed === 'TP Hit' || trimmed === 'TP' || trimmed === 'MANUAL_CLOSE' || trimmed === 'MANUAL') {
+      return '';
+    }
+    return trimmed.replace(/\s*\((SL Hit|TP Hit|Manual Close)\)$/i, '').trim();
+  };
+
+  const startEditComment = (tradeId: string, currentComment: string | null | undefined) => {
+    setEditingCommentId(tradeId);
+    setEditingCommentVal(cleanUserNote(currentComment));
+  };
+
+  const saveComment = (tradeId: string) => {
+    const cleaned = cleanUserNote(editingCommentVal);
+    tradingEngine.updateHistoryComment(tradeId, cleaned);
+    setEditingCommentId(null);
+    window.dispatchEvent(new CustomEvent('show-toast', { detail: '💬 Catatan trade disimpan!' }));
+  };
+
+  const cancelEditComment = () => {
+    setEditingCommentId(null);
+  };
 
   useEffect(() => {
     setTrades(tradingEngine.getTradeHistory());
@@ -84,6 +122,8 @@ export const TradesTab: React.FC = () => {
             <th>Risk ($)</th>
             <th>RR</th>
             <th>Final PnL</th>
+            <th>Close Reason</th>
+            <th>Comment / Notes</th>
             <th>Screenshots</th>
             <th>Opened At</th>
             <th>Closed At</th>
@@ -150,6 +190,49 @@ export const TradesTab: React.FC = () => {
                 <td>${riskAmount.toFixed(2)}</td>
                 <td>1 : {rr.toFixed(2)}</td>
                 <td className={pnlClass}>{pnlFormatted}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>
+                  {(() => {
+                    const reason = getTradeCloseReason(t);
+                    return (
+                      <span className={`te2-reason-badge ${reason.toLowerCase()}`}>
+                        {reason === 'SL' ? 'SL Hit' : reason === 'TP' ? 'TP Hit' : 'Manual'}
+                      </span>
+                    );
+                  })()}
+                </td>
+                <td className="te2-comment-cell">
+                  {editingCommentId === t.tradeId ? (
+                    <div className="te2-inline-edit-wrap" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="text"
+                        className="te2-inline-edit-input"
+                        value={editingCommentVal}
+                        maxLength={100}
+                        autoFocus
+                        placeholder="Add trade note..."
+                        onChange={(e) => setEditingCommentVal(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveComment(t.tradeId);
+                          if (e.key === 'Escape') cancelEditComment();
+                        }}
+                      />
+                      <button className="te2-inline-edit-btn check" onClick={() => saveComment(t.tradeId)} title="Save (Enter)">✓</button>
+                      <button className="te2-inline-edit-btn cancel" onClick={cancelEditComment} title="Cancel (Esc)">✕</button>
+                    </div>
+                  ) : (
+                    <div
+                      className="te2-comment-display"
+                      onClick={() => startEditComment(t.tradeId, t.comment)}
+                      title="Click to edit note"
+                    >
+                      {cleanUserNote(t.comment) ? (
+                        <span className="te2-comment-text">{cleanUserNote(t.comment)}</span>
+                      ) : (
+                        <span className="te2-comment-placeholder">+ Add note</span>
+                      )}
+                    </div>
+                  )}
+                </td>
                 <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                   <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
                     {t.screenshots && t.screenshots.length > 0 && t.screenshots.map((ss) => (

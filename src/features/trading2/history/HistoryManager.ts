@@ -37,6 +37,7 @@ export class HistoryManager {
       openedAt: trade.openedAt,
       closedAt: trade.closedAt,
       comment: trade.comment,
+      closeReason: trade.closeReason ?? 'MANUAL',
       screenshots: trade.screenshots,
     };
 

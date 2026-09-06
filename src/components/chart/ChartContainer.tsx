@@ -19,7 +19,7 @@ import { findNearestCandleIndex } from '@features/replay';
 import { unixSecondsToDateString } from '@features/replay';
 import { defaultRange, focusRange, calculateReplayViewport, PAN_LOAD_THRESHOLD, DEFAULT_VISIBLE_CANDLES } from '@features/chart/viewport';
 import { getSetting, setSetting } from '@features/database';
-import { formatTimestampInTimezone, formatTickMark } from '@features/timezone';
+import { formatTimestampInTimezone, formatTimestampWithDayInTimezone, formatTickMark, getUtcOffsetMinutes } from '@features/timezone';
 import { useTheme, isDarkTheme } from '@features/appearance';
 import type { ThemeObject } from '@features/appearance';
 import { resampleCandles, timeframeToSeconds } from '@/utils/dataResampler';
@@ -85,16 +85,59 @@ function hexToRgb(hex: string): string {
 }
 
 /**
- * Robust mapping from screen coordinate X on source chart to UTC timestamp,
- * supporting both candle areas and future/past empty areas.
+ * Advance or rewind time by N bars, skipping weekends (Saturday & Sunday pre-market) for Forex/Commodities.
+ */
+function addTradingInterval(baseTime: number, deltaBars: number, intervalSec: number, isCrypto: boolean = false): number {
+  const roundedBars = Math.round(deltaBars);
+  if (isCrypto || roundedBars === 0) return Math.round(baseTime + deltaBars * intervalSec);
+
+  if (roundedBars > 0) {
+    let t = baseTime;
+    for (let i = 0; i < roundedBars; i++) {
+      t += intervalSec;
+      const d = new Date(t * 1000);
+      const day = d.getUTCDay(); // 0=Sun, 6=Sat
+      const hour = d.getUTCHours();
+      // If Saturday (day 6) or Sunday before 21:00 UTC (day 0, hour < 21)
+      if (day === 6 || (day === 0 && hour < 21)) {
+        const daysToAdd = day === 6 ? 1 : 0;
+        const targetSun = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + daysToAdd, 21, 0, 0));
+        t = Math.floor(targetSun.getTime() / 1000);
+      }
+    }
+    return t;
+  } else {
+    let t = baseTime;
+    const count = Math.abs(roundedBars);
+    for (let i = 0; i < count; i++) {
+      t -= intervalSec;
+      const d = new Date(t * 1000);
+      const day = d.getUTCDay();
+      const hour = d.getUTCHours();
+      if (day === 6 || (day === 0 && hour < 21)) {
+        const daysToSub = day === 0 ? 2 : 1;
+        const targetFri = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - daysToSub, 21, 0, 0));
+        t = Math.floor(targetFri.getTime() / 1000);
+      }
+    }
+    return t;
+  }
+}
+
+/**
+ * Robust mapping from screen coordinate X on source chart to UTC timestamp.
+ * Prioritizes 100% exact real candle timestamps from allCandles (database),
+ * falling back to forex-aware trading intervals if beyond dataset boundaries.
  */
 function getTimeFromCoordinate(
   chart: IChartApi,
   x: number,
-  candles: { time: number }[],
-  timeframe: Timeframe | string
+  displayCandles: { time: number }[],
+  timeframe: Timeframe | string,
+  allCandles?: { time: number }[],
+  isCrypto: boolean = false
 ): number | null {
-  if (!chart || !candles || candles.length === 0) return null;
+  if (!chart || !displayCandles || displayCandles.length === 0) return null;
   const timeScale = chart.timeScale();
 
   try {
@@ -108,22 +151,42 @@ function getTimeFromCoordinate(
   if (logical === null || typeof logical !== 'number' || !Number.isFinite(logical)) return null;
 
   const intervalSec = timeframeToSeconds(timeframe);
-  const lastIdx = candles.length - 1;
-  const lastCandle = candles[lastIdx];
-  const firstCandle = candles[0];
+  const lastIdx = displayCandles.length - 1;
+  const lastCandle = displayCandles[lastIdx];
+  const firstCandle = displayCandles[0];
 
   if (logical >= lastIdx) {
-    const deltaBars = logical - lastIdx;
-    return Math.round(lastCandle.time + deltaBars * intervalSec);
+    const deltaBars = Math.round(logical - lastIdx);
+    // 1. Look up exact real candle timestamp from full dataset if in replay mode
+    if (allCandles && allCandles.length > 0) {
+      const idxInAll = allCandles.findIndex((c) => c.time === lastCandle.time);
+      if (idxInAll !== -1) {
+        const targetIdx = idxInAll + deltaBars;
+        if (targetIdx >= 0 && targetIdx < allCandles.length) {
+          return allCandles[targetIdx].time;
+        }
+      }
+    }
+    // 2. Fallback to market-aware interval calculation
+    return addTradingInterval(lastCandle.time, deltaBars, intervalSec, isCrypto);
   } else if (logical <= 0) {
-    const deltaBars = 0 - logical;
-    return Math.round(firstCandle.time - deltaBars * intervalSec);
+    const deltaBars = Math.round(logical);
+    if (allCandles && allCandles.length > 0) {
+      const idxInAll = allCandles.findIndex((c) => c.time === firstCandle.time);
+      if (idxInAll !== -1) {
+        const targetIdx = idxInAll + deltaBars;
+        if (targetIdx >= 0 && targetIdx < allCandles.length) {
+          return allCandles[targetIdx].time;
+        }
+      }
+    }
+    return addTradingInterval(firstCandle.time, deltaBars, intervalSec, isCrypto);
   } else {
     const floorIdx = Math.floor(logical);
     const ceilIdx = Math.min(lastIdx, floorIdx + 1);
     const frac = logical - floorIdx;
-    const t1 = candles[floorIdx].time;
-    const t2 = candles[ceilIdx].time;
+    const t1 = displayCandles[floorIdx].time;
+    const t2 = displayCandles[ceilIdx].time;
     return Math.round(t1 + frac * (t2 - t1));
   }
 }
@@ -202,6 +265,115 @@ function getCoordinateFromTime(
   return null;
 }
 
+interface FutureTickMark {
+  x: number;
+  text: string;
+  isDay: boolean;
+}
+
+function calculateFutureTickMarks(
+  chart: IChartApi | null,
+  displayCandles: { time: number }[],
+  timeframe: string | Timeframe,
+  timezone: string,
+  chartWidth: number,
+  allCandles?: { time: number }[],
+  isCrypto: boolean = false
+): FutureTickMark[] {
+  if (!chart || !displayCandles || displayCandles.length === 0 || chartWidth <= 0) return [];
+  const timeScale = chart.timeScale();
+  const range = timeScale.getVisibleLogicalRange();
+  const lastIdx = displayCandles.length - 1;
+  if (!range || range.to <= lastIdx) return [];
+
+  const lastCandle = displayCandles[lastIdx];
+  const intervalSec = timeframeToSeconds(timeframe);
+  const lastX = timeScale.logicalToCoordinate(lastIdx as any);
+  const nextX = timeScale.logicalToCoordinate((lastIdx + 1) as any);
+  if (lastX === null || nextX === null) return [];
+
+  const barWidth = Math.max(1, Math.abs(nextX - lastX));
+  const barsPerDay = Math.max(1, Math.round(86400 / intervalSec));
+  const dayWidth = barsPerDay * barWidth;
+
+  const ticks: FutureTickMark[] = [];
+  const maxLogical = Math.min(range.to, lastIdx + 400);
+
+  const idxInAll = allCandles && allCandles.length > 0 ? allCandles.findIndex((c) => c.time === lastCandle.time) : -1;
+
+  // Match native chart:
+  // If days are very crowded (dayWidth < 50px), step days so labels don't collide
+  const dayStep = dayWidth < 50 ? Math.max(1, Math.ceil(55 / dayWidth)) : 1;
+  // Only show intraday hours if zoomed in close enough (dayWidth > 250px) and timeframe <= 1H
+  const showIntraDayHours = dayWidth > 250 && intervalSec <= 3600;
+  let hourInterval = 24;
+  if (showIntraDayHours) {
+    if (dayWidth >= 1200) hourInterval = 1;
+    else if (dayWidth >= 600) hourInterval = 2;
+    else if (dayWidth >= 400) hourInterval = 4;
+    else hourInterval = 6;
+  }
+
+  let dayCount = 0;
+  let lastPlacedX = -999;
+
+  // Track previous day using timezone offset
+  const lastOffset = getUtcOffsetMinutes(timezone, lastCandle.time);
+  let prevLocalDay = Math.floor((lastCandle.time + lastOffset * 60) / 86400);
+
+  for (let logical = lastIdx + 1; logical <= maxLogical; logical++) {
+    const x = timeScale.logicalToCoordinate(logical as any);
+    if (x === null || x < 0) continue;
+    if (x > chartWidth - 45) break;
+
+    const deltaBars = Math.round(logical - lastIdx);
+    let futureTime: number;
+
+    // Use exact real candle timestamp from full dataset if available
+    if (idxInAll !== -1 && allCandles && idxInAll + deltaBars < allCandles.length) {
+      futureTime = allCandles[idxInAll + deltaBars].time;
+    } else {
+      futureTime = addTradingInterval(lastCandle.time, deltaBars, intervalSec, isCrypto);
+    }
+
+    const offsetMin = getUtcOffsetMinutes(timezone, futureTime);
+    const localSec = futureTime + offsetMin * 60;
+    const currLocalDay = Math.floor(localSec / 86400);
+    const isNewDay = currLocalDay !== prevLocalDay;
+
+    if (isNewDay) {
+      prevLocalDay = currLocalDay;
+      dayCount++;
+
+      if (dayCount % dayStep === 0) {
+        if (x - lastPlacedX >= 45) {
+          ticks.push({
+            x,
+            text: formatTickMark(futureTime, timezone, 2),
+            isDay: true,
+          });
+          lastPlacedX = x;
+        }
+      }
+    } else if (showIntraDayHours) {
+      const localHour = Math.floor((localSec % 86400) / 3600);
+      const localMin = Math.floor((localSec % 3600) / 60);
+      if (localMin === 0 && localHour % hourInterval === 0) {
+        if (x - lastPlacedX >= 55) {
+          ticks.push({
+            x,
+            text: formatTickMark(futureTime, timezone, 3),
+            isDay: false,
+          });
+          lastPlacedX = x;
+        }
+      }
+    }
+  }
+
+  return ticks;
+}
+
 function computeScaleMargins(bottomPanesHeight: number, totalHeight: number) {
   const timeScaleHeight = 26;
   if (bottomPanesHeight <= 0 || totalHeight <= 0) {
@@ -244,6 +416,14 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
     const lastSymbolTfKeyRef = useRef<string | null>(null);
     const prevResetTokenRef = useRef<number>(resetToken);
     const { theme } = useTheme();
+    const isLight = !isDarkTheme(theme);
+    const labelBg = theme.scale.price.background && theme.scale.price.background !== 'transparent'
+      ? theme.scale.price.background
+      : (isLight ? '#334155' : '#1e293b');
+    const defaultTextColor = isLight ? '#334155' : '#d1d5db';
+    const textColor = theme.scale.price.text && theme.scale.price.text !== '#838da0'
+      ? theme.scale.price.text
+      : defaultTextColor;
     const { indicators, dayeQuartersHeight, rsiHeight } = useIndicatorStore();
     const bottomIndicatorsHeight = useMemo(
       () => calculateBottomIndicatorsHeight(indicators, dayeQuartersHeight, rsiHeight, timeframe),
@@ -257,6 +437,28 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
 
     const { replayState, sessionReady, replayStatus, confirmReplayStartPoint } = useReplay();
     const isDatasetReady = allCandles && allCandles.length > 0;
+
+    // Projected Future Time Scale Ticks & Crosshair Future Badge
+    const [futureHover, setFutureHover] = useState<{ x: number; label: string } | null>(null);
+    const [futureTicks, setFutureTicks] = useState<FutureTickMark[]>([]);
+
+    const updateFutureTicks = useCallback(() => {
+      const container = containerRef.current;
+      const chart = chartRef.current;
+      if (!container || !chart) return;
+      const symStr = String(symbolName || symbolId || '');
+      const isCrypto = /btc|eth|sol|xrp|crypto/i.test(symStr);
+      const ticks = calculateFutureTickMarks(
+        chart,
+        chartDataRef.current,
+        timeframeRef.current,
+        timezoneRef.current,
+        container.clientWidth,
+        allCandlesRef.current,
+        isCrypto
+      );
+      setFutureTicks(ticks);
+    }, [symbolName, symbolId]);
 
     // Multi-layout Synchronized Vertical Cursor Shadow (Direct DOM ref for 0ms latency & 0 React re-renders)
     const shadowRef = useRef<HTMLDivElement | null>(null);
@@ -554,7 +756,7 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
         localization: {
           timeFormatter: (time: Time) => {
             const ts = typeof time === 'number' ? time : (time as any).timestamp ?? 0;
-            return formatTimestampInTimezone(ts, timezoneRef.current);
+            return formatTimestampWithDayInTimezone(ts, timezoneRef.current);
           },
         },
         timeScale: {
@@ -715,6 +917,9 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
         if (currentShadowTimestampRef.current !== null) {
           updateShadowCoordinate(currentShadowTimestampRef.current);
         }
+
+        // Update projected future time ticks on visible range change
+        updateFutureTicks();
       };
       chart.timeScale().subscribeVisibleLogicalRangeChange(handleVisibleLogicalRangeChange);
 
@@ -733,7 +938,34 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
           setPreviewTime(null);
         }
 
-        // 2. Global Crosshair Synchronization publishing
+        // 2. Obtain exact timestamp from params or compute from screen coordinate in empty areas
+        const containerEl = containerRef.current;
+        const chart = chartRef.current;
+        if (!containerEl || !chart) return;
+
+        const rect = containerEl.getBoundingClientRect();
+        if (rect.height <= 0 || rect.width <= 0) return;
+
+        const symStr = String(symbolName || symbolId || '');
+        const isCrypto = /btc|eth|sol|xrp|crypto/i.test(symStr);
+        let time: number | null =
+          typeof params?.time === 'number' && Number.isFinite(params.time) && params.time > 0
+            ? params.time
+            : params?.point && params.point.x >= 0
+            ? getTimeFromCoordinate(chart, params.point.x, chartDataRef.current, timeframeRef.current, allCandlesRef.current, isCrypto)
+            : null;
+
+        // 3. Future Crosshair Time Badge for empty right area (where params.time is undefined)
+        if (params && params.point && params.point.x >= 0 && params.point.y >= 0 && !params.time && time !== null) {
+          setFutureHover({
+            x: params.point.x,
+            label: formatTimestampWithDayInTimezone(time, timezoneRef.current),
+          });
+        } else {
+          setFutureHover(null);
+        }
+
+        // 4. Global Crosshair Synchronization publishing
         const pId = paneIdRef.current;
         if (!workspaceRef.current?.syncCrosshair) return;
 
@@ -744,19 +976,6 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
           }
           return;
         }
-
-        const containerEl = containerRef.current;
-        const chart = chartRef.current;
-        if (!containerEl || !chart) return;
-
-        const rect = containerEl.getBoundingClientRect();
-        if (rect.height <= 0 || rect.width <= 0) return;
-
-        // Obtain exact timestamp from params or compute from screen coordinate in empty areas
-        let time: number | null =
-          typeof params.time === 'number' && Number.isFinite(params.time) && params.time > 0
-            ? params.time
-            : getTimeFromCoordinate(chart, params.point.x, chartDataRef.current, timeframeRef.current);
 
         if (time !== null && Number.isFinite(time) && time > 0) {
           activeSourcePaneRef.current = pId;
@@ -893,7 +1112,7 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
         localization: {
           timeFormatter: (time: Time) => {
             const ts = typeof time === 'number' ? time : (time as any).timestamp ?? 0;
-            return formatTimestampInTimezone(ts, timezone);
+            return formatTimestampWithDayInTimezone(ts, timezone);
           },
         },
         timeScale: {
@@ -904,7 +1123,8 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
         },
       } as any);
       chart.timeScale().applyOptions({});
-    }, [timezone]);
+      updateFutureTicks();
+    }, [timezone, updateFutureTicks]);
 
     // Appearance: apply theme changes to chart in realtime.
     useEffect(() => {
@@ -1085,7 +1305,10 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
       ) {
         loadMoreBeforeRef.current();
       }
-    }, [displayCandles, resetToken]);
+
+      // Update projected future time ticks on data update
+      updateFutureTicks();
+    }, [displayCandles, resetToken, updateFutureTicks]);
 
 
     useImperativeHandle(
@@ -1187,6 +1410,7 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
               activeSourcePaneRef.current = null;
             }
             updateShadowCoordinate(null);
+            setFutureHover(null);
           }}
         />
 
@@ -1196,6 +1420,31 @@ const ChartContainer = forwardRef<ChartContainerHandle, ChartContainerProps>(
           className="chart-cursor-shadow"
           style={{ display: 'none' }}
         />
+
+        {/* Projected Future Time Scale Ticks on Bottom Axis */}
+        {futureTicks.length > 0 && (
+          <div className="chart-future-ticks-container">
+            {futureTicks.map((tick, i) => (
+              <span
+                key={i}
+                className={`chart-future-tick ${tick.isDay ? 'chart-future-tick--day' : 'chart-future-tick--hour'}`}
+                style={{ left: tick.x, color: tick.isDay ? textColor : '#787b86' }}
+              >
+                {tick.text}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Future Crosshair Time Badge on Bottom Axis */}
+        {futureHover && (
+          <div
+            className="chart-future-crosshair-badge"
+            style={{ left: futureHover.x, background: labelBg }}
+          >
+            {futureHover.label}
+          </div>
+        )}
 
         {/* Day 8: Timestamp preview during start point selection */}
         {replayState.status === 'selecting' && previewLabel && (

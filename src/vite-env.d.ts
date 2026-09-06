@@ -148,5 +148,7 @@ interface Window {
     activateLicense?: (serialKey: string) => Promise<{ success: boolean; message: string }>;
     getHardwareId?: () => Promise<string>;
     deactivateLicense?: () => Promise<boolean>;
+    geminiRequest?: (params: { prompt: string; images?: string[]; apiKey: string; model: string }) => Promise<string>;
+    openAiRequest?: (params: { url: string; apiKey?: string; model: string; messages: any[] }) => Promise<string>;
   };
 }

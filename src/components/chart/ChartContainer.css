@@ -100,5 +100,71 @@
   pointer-events: none;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+}
+
+/* Projected Future Time Scale Ticks on Bottom Axis - 1:1 match with Lightweight Charts */
+.chart-future-ticks-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 26px;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 6;
+}
+
+.chart-future-tick {
+  position: absolute;
+  bottom: 0;
+  height: 26px;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #d1d4dc;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  user-select: none;
+  line-height: 26px;
+  letter-spacing: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+.chart-future-tick--day {
+  color: #d1d4dc;
+  font-weight: 500;
+}
+
+.chart-future-tick--hour {
+  color: #787b86;
+  font-weight: 400;
+}
+
+/* Future Crosshair Time Badge on Bottom Axis - 1:1 flush match with native Lightweight Charts time badge */
+.chart-future-crosshair-badge {
+  position: absolute;
+  bottom: 0;
+  height: 26px;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #ffffff;
+  border-radius: 0;
+  padding: 0 8px;
+  font-size: 12px;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 500;
+  line-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: normal;
+  z-index: 40;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: none;
+  -webkit-font-smoothing: antialiased;
 }

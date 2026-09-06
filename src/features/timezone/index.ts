@@ -10,6 +10,7 @@ export {
   getAllTimezoneIds,
   getUtcOffsetMinutes,
   formatTimestampInTimezone,
+  formatTimestampWithDayInTimezone,
   formatTimestampUTC,
   formatOffsetLabel,
   buildTimezoneList,

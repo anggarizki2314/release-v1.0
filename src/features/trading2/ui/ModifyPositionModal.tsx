@@ -16,6 +16,7 @@ export interface ModifyItemData {
   volume: number;
   stopLoss: number | null;
   takeProfit: number | null;
+  comment?: string | null;
   isPendingOrder?: boolean;
 }
 
@@ -30,6 +31,7 @@ export interface ModifyPositionModalProps {
     stopLoss: number | null;
     takeProfit: number | null;
     entryPrice?: number;
+    comment?: string | null;
   }) => void;
 }
 
@@ -53,6 +55,7 @@ export const ModifyPositionModal: React.FC<ModifyPositionModalProps> = ({
   const [riskBase, setRiskBase] = useState<RiskBaseMode>('BALANCE');
   const [riskPercent, setRiskPercent] = useState<number>(1.0);
   const [riskDollar, setRiskDollar] = useState<number>(100);
+  const [comment, setComment] = useState<string>('');
 
   // Floating Draggable Position
   const [pos, setPos] = useState<{ x: number; y: number }>(() => {
@@ -109,6 +112,7 @@ export const ModifyPositionModal: React.FC<ModifyPositionModalProps> = ({
       setEntryPrice(item.entryPrice);
       setStopLoss(item.stopLoss != null ? String(item.stopLoss) : '');
       setTakeProfit(item.takeProfit != null ? String(item.takeProfit) : '');
+      setComment(item.comment ?? '');
 
       const spec = InstrumentMetadata.getSpec(item.symbol);
       const contractSize = spec.contractSize;
@@ -270,6 +274,7 @@ export const ModifyPositionModal: React.FC<ModifyPositionModalProps> = ({
       volume: Math.max(0.01, volume),
       stopLoss: slValue,
       takeProfit: tpValue,
+      comment: comment.trim() || null,
       ...(item.isPendingOrder ? { entryPrice: effectiveEntry } : {}),
     });
     onClose();
@@ -462,6 +467,21 @@ export const ModifyPositionModal: React.FC<ModifyPositionModalProps> = ({
                 value={takeProfit}
                 onChange={(e) => setTakeProfit(e.target.value)}
                 placeholder={isBuy ? `> ${effectiveEntry.toFixed(digits)}` : `< ${effectiveEntry.toFixed(digits)}`}
+              />
+            </div>
+          </div>
+
+          {/* Row 5: Comment / Trade Notes */}
+          <div className="te2-modify-row">
+            <div className="te2-modify-field" style={{ gridColumn: 'span 2' }}>
+              <label className="te2-modify-label">Comment / Notes (Max 100 chars)</label>
+              <input
+                type="text"
+                maxLength={100}
+                className="te2-modify-input"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Trade setup note, reason, or reminder..."
               />
             </div>
           </div>

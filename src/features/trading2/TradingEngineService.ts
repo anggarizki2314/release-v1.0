@@ -600,6 +600,30 @@ export class TradingEngineService {
     return this.historyManager.getHistory();
   }
 
+  public updateHistoryComment(tradeId: string, comment: string): void {
+    const history = this.store.getHistory();
+    const trade = history.find(h => h.tradeId === tradeId);
+    if (trade) {
+      this.store.updateHistory(tradeId, { comment: comment.trim() || null });
+      this.persistTradingState();
+      this.notifyListeners();
+    }
+  }
+
+  public updatePositionComment(positionId: string, comment: string): void {
+    const pos = this.positionManager.getPosition(positionId) || 
+                this.positionManager.getOpenPositions().find(p => p.positionId === positionId);
+    if (pos) {
+      const cleanComment = comment.trim() || null;
+      this.positionManager.updatePosition(positionId, { comment: cleanComment });
+      if (pos.orderId) {
+        this.orderManager.updateOrder(pos.orderId, { comment: cleanComment });
+      }
+      this.persistTradingState();
+      this.notifyListeners();
+    }
+  }
+
   public attachScreenshotToHistory(tradeId: string, dataUrl: string, timeframe: string): void {
     const history = this.store.getHistory();
     const trade = history.find(h => h.tradeId === tradeId);

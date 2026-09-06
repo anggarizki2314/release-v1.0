@@ -839,13 +839,17 @@ export const IndicatorsLayer: React.FC<IndicatorsLayerProps> = ({
                   opacity={line.opacity !== undefined ? line.opacity : 0.9}
                 />
 
-                {/* Clean Text Label above the line on the right side (no box, no price) */}
+                {/* Clean Text Label placed at the TOP RIGHT above the line */}
                 {(() => {
-                  const targetEndX = Math.min(endX, chartWidth - 8);
                   const op = line.opacity !== undefined ? line.opacity : 0.9;
+                  // Position label at the right end of the line, above the line
+                  const labelX = Math.min(endX - 2, chartWidth - 8);
+
+                  if (labelX < -20 || startX > chartWidth + 20) return null;
+
                   return (
                     <text
-                      x={targetEndX}
+                      x={labelX}
                       y={y - 4}
                       fill={line.color}
                       fillOpacity={op}

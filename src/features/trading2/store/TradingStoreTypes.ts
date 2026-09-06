@@ -96,6 +96,7 @@ export interface HistoryState {
   openedAt: number;
   closedAt: number;
   comment: string | null;
+  closeReason?: 'MANUAL' | 'SL' | 'TP' | 'STOPOUT' | 'REVERSE' | 'PARTIAL' | string;
   screenshots?: TradeScreenshot[];
 }
 

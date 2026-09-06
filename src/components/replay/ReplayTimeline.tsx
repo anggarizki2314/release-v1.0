@@ -7,7 +7,7 @@ import {
   findNearestCandle,
   isTimelineValid,
 } from '@features/replay/replayTimeline';
-import { formatTimestampInTimezone, parseDateTimeInTimezone } from '@features/timezone';
+import { formatTimestampInTimezone, formatTimestampWithDayInTimezone, parseDateTimeInTimezone } from '@features/timezone';
 import type { Candle } from '@/types';
 import './ReplayTimeline.css';
 
@@ -249,13 +249,13 @@ export default function ReplayTimeline({ allCandles, timezone }: ReplayTimelineP
       {/* Timestamp labels */}
       <div className="replay-timeline__labels">
         <span className="replay-timeline__label">
-          {startTime !== null ? formatTimestampInTimezone(startTime, timezone) : '—'}
+          {startTime !== null ? formatTimestampWithDayInTimezone(startTime, timezone) : '—'}
         </span>
         <span className="replay-timeline__label replay-timeline__label--current">
-          {currentTime !== null ? formatTimestampInTimezone(currentTime, timezone) : '—'}
+          {currentTime !== null ? formatTimestampWithDayInTimezone(currentTime, timezone) : '—'}
         </span>
         <span className="replay-timeline__label">
-          {endTime !== null ? formatTimestampInTimezone(endTime, timezone) : '—'}
+          {endTime !== null ? formatTimestampWithDayInTimezone(endTime, timezone) : '—'}
         </span>
       </div>
 
@@ -302,7 +302,7 @@ export default function ReplayTimeline({ allCandles, timezone }: ReplayTimelineP
             className="replay-timeline__tooltip replay-timeline__tooltip--visible"
             style={{ left: `${hoverPercent}%`, transform: 'translateX(-50%)' }}
           >
-            <span>{formatTimestampInTimezone(tooltipTimestamp, timezone)}</span>
+            <span>{formatTimestampWithDayInTimezone(tooltipTimestamp, timezone)}</span>
           </div>
         )}
 
@@ -312,7 +312,7 @@ export default function ReplayTimeline({ allCandles, timezone }: ReplayTimelineP
             className="replay-timeline__tooltip replay-timeline__tooltip--visible"
             style={{ left: `${progressPercent}%`, transform: 'translateX(-50%)' }}
           >
-            <span>{formatTimestampInTimezone(currentTime, timezone)}</span>
+            <span>{formatTimestampWithDayInTimezone(currentTime, timezone)}</span>
           </div>
         )}
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowLeft, Shield, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Shield, CheckCircle, Sparkles } from 'lucide-react';
 import { PerformanceOverview } from './PerformanceOverview';
 import { TradingObjectiveCard } from './TradingObjectiveCard';
 import { EquityCurveChart } from './EquityCurveChart';
@@ -7,6 +7,7 @@ import { WinnersLosersCard } from './WinnersLosersCard';
 import { DailyPerformanceMatrix } from './DailyPerformanceMatrix';
 import { TradeDistributionChart } from './TradeDistributionChart';
 import { TradeJournal } from './TradeJournal';
+import { AICoachModal } from './AICoachModal';
 import { useSessionAnalytics } from './useSessionAnalytics';
 import type { AnalyticsSession } from './types';
 import './AnalyticsDetail.css';
@@ -18,6 +19,7 @@ interface AnalyticsDetailProps {
 
 export const AnalyticsDetail: React.FC<AnalyticsDetailProps> = ({ session, onBack }) => {
   const isChallenge = session.mode === 'challenge';
+  const [showAuditModal, setShowAuditModal] = useState<boolean>(false);
   
   // Real session-scoped analytics data & calculations
   const analytics = useSessionAnalytics(session);
@@ -48,12 +50,23 @@ export const AnalyticsDetail: React.FC<AnalyticsDetailProps> = ({ session, onBac
           </div>
         </div>
 
-        {isChallenge && (
-          <div className="ana-detail__challenge-badge">
-            <CheckCircle size={16} />
-            <span>CHALLENGE STATUS: {session.status.toUpperCase()}</span>
-          </div>
-        )}
+        <div className="ana-detail__right">
+          <button
+            className="ana-detail__ai-audit-btn"
+            onClick={() => setShowAuditModal(true)}
+            title="Lakukan audit komprehensif sesi ini dengan Gemini AI"
+          >
+            <Sparkles size={15} />
+            <span>AI Session Audit</span>
+          </button>
+
+          {isChallenge && (
+            <div className="ana-detail__challenge-badge">
+              <CheckCircle size={16} />
+              <span>CHALLENGE STATUS: {session.status.toUpperCase()}</span>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Main Dashboard Body */}
@@ -92,9 +105,18 @@ export const AnalyticsDetail: React.FC<AnalyticsDetailProps> = ({ session, onBac
 
         {/* Section 6: Real Trade Journal Table */}
         <section className="ana-detail__section">
-          <TradeJournal trades={analytics.trades} />
+          <TradeJournal trades={analytics.trades} sessionId={session.id} />
         </section>
       </main>
+
+      {/* AI Session Audit Modal */}
+      <AICoachModal
+        isOpen={showAuditModal}
+        onClose={() => setShowAuditModal(false)}
+        mode="session"
+        session={session}
+        analytics={analytics}
+      />
     </div>
   );
 };

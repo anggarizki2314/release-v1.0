@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, shell, net } from 'electron';
 import path from 'path';
 import {
   initDatabase,
@@ -616,4 +616,186 @@ ipcMain.handle('license:getHwid', async () => {
 ipcMain.handle('license:deactivate', async () => {
   return deactivateLicenseLocal();
 });
+
+// --- Gemini AI Bridge Engine ---
+ipcMain.handle('ai:geminiRequest', async (_event, params: { prompt: string; images?: string[]; apiKey: string; model: string }) => {
+  const { prompt, images = [], apiKey, model } = params;
+  const trimmedKey = (apiKey || '').trim();
+  if (!trimmedKey) throw new Error('API Key Gemini tidak boleh kosong.');
+
+  let targetModel = model || 'gemini-3.6-flash';
+  if (targetModel === 'gemini-1.5-flash' || targetModel === 'gemini-1.5-pro' || targetModel === 'gemini-2.0-flash' || targetModel === 'gemini-flash-latest') {
+    targetModel = 'gemini-3.6-flash';
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${trimmedKey}`;
+
+  const parts: any[] = [{ text: prompt }];
+  for (const imgUrl of images) {
+    const match = imgUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      parts.push({
+        inlineData: {
+          mimeType: match[1],
+          data: match[2],
+        },
+      });
+    }
+  }
+
+  const response = await net.fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 2500,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    let errorMsg = `HTTP ${response.status}`;
+    try {
+      const data = await response.json();
+      if (data?.error?.message) errorMsg = data.error.message;
+    } catch {
+      errorMsg = response.statusText || errorMsg;
+    }
+
+    if (response.status === 400 && errorMsg.toLowerCase().includes('api key')) {
+      throw new Error('API Key Gemini tidak valid. Mohon periksa atau masukkan ulang API Key.');
+    } else if (response.status === 429) {
+      throw new Error('Limit kuota gratis Gemini tercapai sementara. Coba ganti model ke Gemini 1.5 Flash atau tunggu sebentar.');
+    }
+    throw new Error(errorMsg);
+  }
+
+  const data = await response.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Google Gemini tidak memberikan respon teks.');
+  return text;
+});
+
+// --- OpenAI / 9Router Bridge Engine ---
+ipcMain.handle('ai:openAiRequest', async (_event, params: { url: string; apiKey?: string; model: string; messages: any[] }) => {
+  const { url, apiKey = '', model, messages } = params;
+  let targetUrl = (url || '').trim();
+  if (!targetUrl) targetUrl = 'http://localhost:20128/v1';
+  if (!targetUrl.endsWith('/chat/completions')) {
+    targetUrl = targetUrl.replace(/\/+$/, '') + '/chat/completions';
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (apiKey && apiKey.trim()) {
+    headers['Authorization'] = `Bearer ${apiKey.trim()}`;
+  }
+
+  let targetModel = (model || '').trim();
+  if (
+    !targetModel ||
+    targetModel === 'claude-3-5-sonnet' ||
+    targetModel === 'default' ||
+    targetModel.startsWith('gemini-')
+  ) {
+    targetModel = 'opencode2';
+  }
+
+  const response = await net.fetch(targetUrl, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model: targetModel,
+      messages,
+      temperature: 0.3,
+      stream: false,
+    }),
+  });
+
+  if (!response.ok) {
+    let errorMsg = `HTTP ${response.status}`;
+    try {
+      const data = await response.json();
+      if (data?.error?.message) errorMsg = data.error.message;
+    } catch {
+      errorMsg = response.statusText || errorMsg;
+    }
+    throw new Error(errorMsg);
+  }
+
+  const rawText = await response.text();
+  const trimmed = rawText.trim();
+
+  // 1. Try standard OpenAI JSON
+  if (trimmed.startsWith('{')) {
+    try {
+      const data = JSON.parse(trimmed);
+      const text = data?.choices?.[0]?.message?.content;
+      if (text) return text;
+    } catch {
+      // Fall through to SSE chunk parser
+    }
+  }
+
+  // 2. Fallback to parse SSE chunks if 9Router streamed response
+  let fullContent = '';
+  const lines = trimmed.split('\n');
+  for (const line of lines) {
+    const l = line.trim();
+    if (l.startsWith('data:') && !l.includes('[DONE]')) {
+      try {
+        const chunk = JSON.parse(l.replace(/^data:\s*/, ''));
+        const piece = chunk?.choices?.[0]?.delta?.content || chunk?.choices?.[0]?.text || '';
+        fullContent += piece;
+      } catch {
+        // ignore chunk parsing errors
+      }
+    }
+  }
+
+  if (fullContent) return fullContent;
+  throw new Error('9Router tidak memberikan respon teks.');
+});
+
+ipcMain.handle('ai:fetchModels', async (_event, params: { url?: string; apiKey?: string }) => {
+  let targetUrl = (params?.url || '').trim() || 'http://localhost:20128/v1';
+  const apiKey = (params?.apiKey || '').trim();
+  let modelsUrl = targetUrl.replace(/\/+$/, '');
+  if (modelsUrl.endsWith('/chat/completions')) {
+    modelsUrl = modelsUrl.replace(/\/chat\/completions$/, '/models');
+  } else if (!modelsUrl.endsWith('/models')) {
+    modelsUrl = `${modelsUrl}/models`;
+  }
+
+  const headers: Record<string, string> = {};
+  if (apiKey) {
+    headers['Authorization'] = `Bearer ${apiKey}`;
+  }
+
+  const tryFetch = async (endpoint: string) => {
+    const res = await net.fetch(endpoint, { headers });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data?.data) ? data.data : null;
+  };
+
+  try {
+    const list = await tryFetch(modelsUrl);
+    if (list) return list;
+  } catch {}
+
+  if (modelsUrl.includes('localhost')) {
+    try {
+      const altUrl = modelsUrl.replace('localhost', '127.0.0.1');
+      const list = await tryFetch(altUrl);
+      if (list) return list;
+    } catch {}
+  }
+
+  return [];
+});
+
 

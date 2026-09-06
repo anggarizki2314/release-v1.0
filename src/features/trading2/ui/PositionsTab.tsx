@@ -25,6 +25,23 @@ export const PositionsTab: React.FC = () => {
   const [modifyItem, setModifyItem] = useState<ModifyItemData | null>(null);
   const [viewImageUrl, setViewImageUrl] = useState<string | null>(null);
   const [pendingScreenshot, setPendingScreenshot] = useState<{ positionId: string, dataUrl: string, timeframe: string } | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentVal, setEditingCommentVal] = useState<string>('');
+
+  const startEditComment = (posId: string, currentComment: string | undefined) => {
+    setEditingCommentId(posId);
+    setEditingCommentVal(currentComment || '');
+  };
+
+  const saveComment = (posId: string) => {
+    tradingEngine.updatePositionComment(posId, editingCommentVal);
+    setEditingCommentId(null);
+    window.dispatchEvent(new CustomEvent('show-toast', { detail: '💬 Catatan posisi diperbarui!' }));
+  };
+
+  const cancelEditComment = () => {
+    setEditingCommentId(null);
+  };
 
   useEffect(() => {
     setPositions(tradingEngine.getOpenPositions());
@@ -168,6 +185,7 @@ export const PositionsTab: React.FC = () => {
               <th>Reward ($)</th>
               <th>RR</th>
               <th>Floating PnL</th>
+              <th>Comment</th>
               <th>Screenshots</th>
               <th>Action</th>
             </tr>
@@ -205,6 +223,7 @@ export const PositionsTab: React.FC = () => {
                         volume: p.volume,
                         stopLoss: p.stopLoss,
                         takeProfit: p.takeProfit,
+                        comment: p.comment,
                       })}
                     >
                       {p.volume} Lot
@@ -218,6 +237,39 @@ export const PositionsTab: React.FC = () => {
                   <td>${p.rewardAmount.toFixed(2)}</td>
                   <td>1 : {p.rr.toFixed(2)}</td>
                   <td className={pnlClass}>{pnlFormatted}</td>
+                  <td className="te2-comment-cell">
+                    {editingCommentId === p.id ? (
+                      <div className="te2-inline-edit-wrap" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="text"
+                          className="te2-inline-edit-input"
+                          value={editingCommentVal}
+                          maxLength={100}
+                          autoFocus
+                          placeholder="Add note..."
+                          onChange={(e) => setEditingCommentVal(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveComment(p.id);
+                            if (e.key === 'Escape') cancelEditComment();
+                          }}
+                        />
+                        <button className="te2-inline-edit-btn check" onClick={() => saveComment(p.id)} title="Save (Enter)">✓</button>
+                        <button className="te2-inline-edit-btn cancel" onClick={cancelEditComment} title="Cancel (Esc)">✕</button>
+                      </div>
+                    ) : (
+                      <div
+                        className="te2-comment-display"
+                        onClick={() => startEditComment(p.id, p.comment)}
+                        title="Click to edit comment"
+                      >
+                        {p.comment ? (
+                          <span className="te2-comment-text">{p.comment}</span>
+                        ) : (
+                          <span className="te2-comment-placeholder">+ Add note</span>
+                        )}
+                      </div>
+                    )}
+                  </td>
                   <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
                       {p.screenshots && p.screenshots.length > 0 && p.screenshots.map((ss) => (
@@ -315,6 +367,7 @@ export const PositionsTab: React.FC = () => {
               volume: updates.volume,
               stopLoss: updates.stopLoss,
               takeProfit: updates.takeProfit,
+              comment: updates.comment,
             });
           }
         }}
