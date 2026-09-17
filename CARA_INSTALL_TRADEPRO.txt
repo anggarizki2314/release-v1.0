@@ -1,0 +1,79 @@
+======================================================================
+               PANDUAN CARA INSTALASI TRADEPRO (WINDOWS & MAC)
+======================================================================
+
+Terima kasih telah menggunakan TradePro!
+Berikut adalah panduan langkah demi langkah cara menginstall aplikasi 
+TradePro di sistem operasi Windows maupun MacBook (macOS).
+
+======================================================================
+1. CARA INSTALL DI WINDOWS (Windows 10 / 11)
+======================================================================
+File Installer: TradePro Setup 4.0.0.exe
+
+Langkah-langkah:
+1. Klik dua kali pada file "TradePro Setup 4.0.0.exe".
+2. Jika muncul pop-up warna biru "Windows protected your PC":
+   - Klik tulisan "More info" (Info selengkapnya).
+   - Klik tombol "Run anyway" (Tetap jalankan).
+   (Catatan: Peringatan ini normal untuk aplikasi baru yang belum 
+   didaftarkan sertifikat berbayar Microsoft).
+3. Installer akan berjalan otomatis dalam beberapa detik.
+4. TradePro langsung terbuka dan shortcut aplikasi otomatis dibuat 
+   di Desktop Windows Anda.
+
+
+======================================================================
+2. CARA INSTALL DI MACBOOK (macOS)
+======================================================================
+Pilih file installer .dmg yang sesuai dengan tipe prosesor Mac Anda:
+- TradePro-macOS-arm64.dmg : Untuk MacBook chip M1, M2, M3, M4 (Apple Silicon)
+- TradePro-macOS-x64.dmg   : Untuk MacBook prosesor Intel
+
+*Tips Mengecek Tipe Mac Anda:
+ Klik logo Apple (pojok kiri atas) -> Pilih "About This Mac" 
+ (Tentang Mac Ini) -> Lihat bagian Chip / Processor.
+
+Langkah-langkah Pemasangan:
+1. Klik dua kali file ".dmg" yang sudah didownload.
+2. Pada jendela yang muncul, tarik (drag & drop) icon "TradePro" 
+   ke dalam folder "Applications".
+3. Tunggu hingga proses copy selesai (100%).
+4. Buka folder "Applications" (Aplikasi) melalui Finder.
+
+
+----------------------------------------------------------------------
+PENTING: Membuka TradePro Pertama Kali di Mac (Bypass Apple Gatekeeper)
+----------------------------------------------------------------------
+macOS memiliki sistem keamanan ketat (Gatekeeper) untuk aplikasi baru 
+di luar App Store. Jika aplikasi langsung didobel-klik dan muncul 
+peringatan tidak bisa dibuka, ikuti salah satu cara berikut:
+
+>>> CARA 1 (Paling Praktis - Hanya 1 Kali Saja):
+1. Buka folder "Applications" di Finder.
+2. JANGAN langsung klik dua kali.
+3. KLIK KANAN (atau tahan tombol Control + Klik) pada icon TradePro.
+4. Pilih opsi "Open" (Buka).
+5. Akan muncul jendela konfirmasi dengan tombol "Open", klik "Open".
+(Setelah dilakukan sekali, ke depannya Anda bisa membukanya secara normal).
+
+>>> CARA 2 (Lewat System Settings Mac):
+1. Buka "System Settings" (Pengaturan Sistem) di Mac.
+2. Pilih menu "Privacy & Security" (Privasi & Keamanan).
+3. Scroll ke bagian bawah sampai menemukan sub-judul "Security".
+4. Akan ada pesan: '"TradePro" was blocked from use...'
+5. Klik tombol "Open Anyway" (Tetap Buka) di samping tulisan tersebut.
+
+>>> CARA 3 (Jika Muncul Pesan "App is damaged and can't be opened"):
+Ini proteksi karantina otomatis macOS untuk aplikasi dari internet.
+Solusinya sangat mudah:
+1. Buka aplikasi "Terminal" di Mac (cari lewat Spotlight/Launchpad).
+2. Salin dan tempel perintah berikut, lalu tekan Enter:
+
+   xattr -cr /Applications/TradePro.app
+
+3. Selesai! TradePro sekarang bisa langsung dibuka normal tanpa kendala.
+
+======================================================================
+Selamat menggunakan TradePro!
+======================================================================
