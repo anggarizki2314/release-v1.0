@@ -4,3 +4,6 @@ dist-electron
 release
 *.db
 .DS_Store
+FIX LAG/
+TradePro/
+release-v1.0/
