@@ -11,19 +11,8 @@ permissions:
 
 jobs:
   build-mac:
-    name: Build Mac (${{ matrix.arch }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-14
-            arch: arm64
-            label: Apple Silicon (M1/M2/M3/M4)
-          - os: macos-13
-            arch: x64
-            label: Intel Mac
-
+    name: Build Mac (Apple Silicon M1/M2/M3/M4)
+    runs-on: macos-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -42,8 +31,8 @@ jobs:
       - name: Compile App Code
         run: npm run build
 
-      - name: Package macOS (${{ matrix.arch }})
-        run: npx electron-builder --mac --${{ matrix.arch }}
+      - name: Package macOS (arm64)
+        run: npx electron-builder --mac --arm64
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -51,7 +40,7 @@ jobs:
       - name: Upload macOS Installer (.dmg & .zip)
         uses: actions/upload-artifact@v4
         with:
-          name: TradePro-macOS-${{ matrix.arch }}
+          name: TradePro-macOS-arm64
           path: |
             release/*.dmg
             release/*.zip
