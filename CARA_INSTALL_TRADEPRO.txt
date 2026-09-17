@@ -1,10 +1,12 @@
 ======================================================================
-               PANDUAN CARA INSTALASI TRADEPRO (WINDOWS & MAC)
+         PANDUAN LENGKAP INSTALASI & AKTIVASI TRADEPRO (WINDOWS & MAC)
 ======================================================================
 
 Terima kasih telah menggunakan TradePro!
-Berikut adalah panduan langkah demi langkah cara menginstall aplikasi 
-TradePro di sistem operasi Windows maupun MacBook (macOS).
+Berikut adalah panduan lengkap langkah demi langkah:
+  1. Cara Install di Windows
+  2. Cara Install di MacBook (macOS)
+  3. Cara Aktivasi Lisensi TradePro (Windows & Mac)
 
 ======================================================================
 1. CARA INSTALL DI WINDOWS (Windows 10 / 11)
@@ -16,7 +18,7 @@ Langkah-langkah:
 2. Jika muncul pop-up warna biru "Windows protected your PC":
    - Klik tulisan "More info" (Info selengkapnya).
    - Klik tombol "Run anyway" (Tetap jalankan).
-   (Catatan: Peringatan ini normal untuk aplikasi baru yang belum 
+   (Catatan: Peringatan ini normal untuk aplikasi baru mandiri yang belum 
    didaftarkan sertifikat berbayar Microsoft).
 3. Installer akan berjalan otomatis dalam beberapa detik.
 4. TradePro langsung terbuka dan shortcut aplikasi otomatis dibuat 
@@ -49,13 +51,13 @@ macOS memiliki sistem keamanan ketat (Gatekeeper) untuk aplikasi baru
 di luar App Store. Jika aplikasi langsung didobel-klik dan muncul 
 peringatan tidak bisa dibuka, ikuti salah satu cara berikut:
 
->>> CARA 1 (Paling Praktis - Hanya 1 Kali Saja):
+>>> CARA 1 (Paling Praktis - Cukup 1 Kali Saja):
 1. Buka folder "Applications" di Finder.
 2. JANGAN langsung klik dua kali.
 3. KLIK KANAN (atau tahan tombol Control + Klik) pada icon TradePro.
 4. Pilih opsi "Open" (Buka).
 5. Akan muncul jendela konfirmasi dengan tombol "Open", klik "Open".
-(Setelah dilakukan sekali, ke depannya Anda bisa membukanya secara normal).
+(Setelah dilakukan sekali, ke depannya aplikasi bisa dibuka normal seperti biasa).
 
 >>> CARA 2 (Lewat System Settings Mac):
 1. Buka "System Settings" (Pengaturan Sistem) di Mac.
@@ -74,6 +76,32 @@ Solusinya sangat mudah:
 
 3. Selesai! TradePro sekarang bisa langsung dibuka normal tanpa kendala.
 
+
 ======================================================================
-Selamat menggunakan TradePro!
+3. CARA AKTIVASI LISENSI TRADEPRO (WINDOWS & MAC)
+======================================================================
+Saat pertama kali membuka TradePro, akan muncul jendela pop-up:
+"Aktivasi TradePro".
+
+Langkah-langkah Aktivasi:
+1. Di dalam jendela aktivasi, perhatikan kotak bertuliskan:
+   "Hardware ID Perangkat Anda" (berupa kode unik hardware perangkat Anda).
+2. Klik tombol "Copy" di samping Hardware ID untuk menyalin kodenya.
+3. Kirimkan Hardware ID tersebut ke Admin / Creator TradePro.
+4. Admin akan mengirimkan "Serial Key / Kode Aktivasi" khusus untuk 
+   perangkat Anda (format: TRD-XXXX-XXXX atau ACT-...).
+5. Salin dan tempel (Paste) Serial Key tersebut ke kolom:
+   "Serial Key / Kode Aktivasi" di TradePro.
+6. Klik tombol "Aktivasi Sekarang".
+7. Muncul pesan sukses warna hijau, dan TradePro akan langsung terbuka 
+   penuh dengan semua fitur aktif secara permanen!
+
+*Catatan: 
+- Lisensi terikat pada Hardware ID perangkat Anda.
+- Jika di kemudian hari Anda menginstal ulang aplikasi TradePro di 
+  laptop/Mac yang sama, Anda tinggal memasukkan Serial Key yang sama tanpa 
+  perlu mendaftar ulang.
+
+======================================================================
+Selamat bertrading dan menganalisa chart bersama TradePro!
 ======================================================================
