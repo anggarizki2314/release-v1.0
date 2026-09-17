@@ -119,53 +119,76 @@ const SPLASH_HTML = `<!DOCTYPE html>
       width: 100%;
       display: flex;
       flex-direction: column;
+      gap: 7px;
+    }
+    .status-meta {
+      width: 100%;
+      display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: space-between;
+      height: 16px;
     }
     .status-text {
       font-size: 11.5px;
       color: #94a3b8;
       font-weight: 500;
-      text-align: center;
-      height: 15px;
-      transition: opacity 0.2s ease;
+      text-align: left;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      max-width: 215px;
+      transition: opacity 0.15s ease;
+    }
+    .status-percent {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: #f87171;
+      text-align: right;
+      flex-shrink: 0;
     }
     .progress-track {
       width: 100%;
-      height: 3.5px;
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 3px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
       overflow: hidden;
       position: relative;
     }
     .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #dc2626, #ef4444, #f87171);
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-bar::after {
+      content: '';
       position: absolute;
       top: 0;
       left: 0;
-      height: 100%;
-      width: 40%;
-      background: linear-gradient(90deg, #ef4444, #f87171, #ef4444);
-      border-radius: 3px;
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-      animation: indeterminate 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+      animation: shimmer 1.5s infinite;
     }
     .version-tag {
       font-size: 10px;
       color: #5d6b82;
       font-weight: 600;
       letter-spacing: 0.5px;
+      text-align: center;
+      margin-top: 2px;
     }
     @keyframes pulse {
       0% { transform: scale(0.97); }
       100% { transform: scale(1.03); }
     }
-    @keyframes indeterminate {
-      0% { left: -40%; width: 30%; }
-      50% { left: 30%; width: 50%; }
-      100% { left: 100%; width: 30%; }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
     }
   </style>
 </head>
@@ -183,34 +206,102 @@ const SPLASH_HTML = `<!DOCTYPE html>
     </div>
 
     <div class="status-section">
-      <div class="status-text" id="status-label">Memulai TradePro Engine...</div>
-      <div class="progress-track">
-        <div class="progress-bar"></div>
+      <div class="status-meta">
+        <div class="status-text" id="status-label">Memulai TradePro Engine...</div>
+        <div class="status-percent" id="status-percent">0%</div>
       </div>
-      <div class="version-tag">v1.0</div>
+      <div class="progress-track">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="version-tag">v4.0.0</div>
     </div>
   </div>
 
   <script>
-    const messages = [
-      'Memulai TradePro Engine...',
-      'Menghubungkan ke SQLite Database...',
-      'Menyiapkan Market & Chart Datasets...',
-      'Memuat Workspace & Analytics...',
-      'Hampir siap...'
-    ];
-    let idx = 0;
+    const { ipcRenderer } = require('electron');
+    const bar = document.getElementById('progress-bar');
     const label = document.getElementById('status-label');
-    setInterval(() => {
-      idx = (idx + 1) % messages.length;
-      if (label) {
-        label.style.opacity = '0';
-        setTimeout(() => {
-          label.textContent = messages[idx];
-          label.style.opacity = '1';
-        }, 150);
+    const percent = document.getElementById('status-percent');
+
+    const steps = [
+      { min: 0, text: 'Memulai TradePro Engine...' },
+      { min: 25, text: 'Menghubungkan ke SQLite Database...' },
+      { min: 52, text: 'Menyiapkan Market & Chart Datasets...' },
+      { min: 78, text: 'Memuat Workspace & Analytics...' },
+      { min: 96, text: 'Aplikasi siap!' }
+    ];
+
+    function setPct(val) {
+      const rounded = Math.min(100, Math.max(0, Math.round(val)));
+      if (bar) bar.style.width = rounded + '%';
+      if (percent) percent.textContent = rounded + '%';
+      
+      let stepText = steps[0].text;
+      for (let i = steps.length - 1; i >= 0; i--) {
+        if (rounded >= steps[i].min) {
+          stepText = steps[i].text;
+          break;
+        }
       }
-    }, 900);
+      if (label && label.textContent !== stepText) {
+        label.textContent = stepText;
+      }
+    }
+
+    let progress = 0;
+    let isFinished = false;
+    const startTime = performance.now();
+
+    // Natural progression ticker while full database and dashboard initialize
+    const ticker = setInterval(() => {
+      if (isFinished) return;
+      if (progress < 25) {
+        progress += 2.0;
+      } else if (progress < 55) {
+        progress += 1.4;
+      } else if (progress < 80) {
+        progress += 0.9;
+      } else if (progress < 88) {
+        progress += 0.4;
+      } else if (progress < 95) {
+        progress += 0.12;
+      }
+      setPct(progress);
+    }, 35);
+
+    function sweepTo100AndOpen() {
+      if (isFinished) return;
+      isFinished = true;
+      clearInterval(ticker);
+
+      let cur = Math.max(progress, 88);
+      const finishTimer = setInterval(() => {
+        cur += 4;
+        if (cur >= 100) {
+          cur = 100;
+          clearInterval(finishTimer);
+          setPct(100);
+          // Open immediately upon reaching 100%!
+          setTimeout(() => {
+            ipcRenderer.send('splash:done');
+          }, 50);
+          return;
+        }
+        setPct(cur);
+      }, 16);
+    }
+
+    // Fired ONLY after full startup init (SQLite + sessions + symbols + React render) finishes!
+    ipcRenderer.on('app:ready', () => {
+      sweepTo100AndOpen();
+    });
+
+    // Safety fallback: if app:ready not received within 15s, sweep anyway
+    setTimeout(() => {
+      if (!isFinished) {
+        sweepTo100AndOpen();
+      }
+    }, 15000);
   </script>
 </body>
 </html>`;
@@ -231,9 +322,9 @@ function createSplashWindow() {
     skipTaskbar: false,
     backgroundColor: '#14171f',
     webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
+      contextIsolation: false,
+      nodeIntegration: true,
+      sandbox: false,
     },
   });
 
@@ -248,23 +339,15 @@ function revealMainWindow() {
   if (isAppReadySent) return;
   isAppReadySent = true;
 
-  const elapsed = Date.now() - splashStartTime;
-  const minDisplayMs = 1800;
-  const remainingWait = Math.max(0, minDisplayMs - elapsed);
-
-  setTimeout(() => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.show();
-      mainWindow.maximize();
-      mainWindow.focus();
-    }
-    if (splashWindow && !splashWindow.isDestroyed()) {
-      setTimeout(() => {
-        splashWindow?.destroy();
-        splashWindow = null;
-      }, 150);
-    }
-  }, remainingWait);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.maximize();
+    mainWindow.show();
+    mainWindow.focus();
+  }
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    splashWindow.destroy();
+    splashWindow = null;
+  }
 }
 
 function createWindow() {
@@ -329,6 +412,14 @@ function createWindow() {
 }
 
 ipcMain.on('app:ready', () => {
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    splashWindow.webContents.send('app:ready');
+  } else {
+    revealMainWindow();
+  }
+});
+
+ipcMain.on('splash:done', () => {
   revealMainWindow();
 });
 
@@ -728,13 +819,22 @@ ipcMain.handle('ai:openAiRequest', async (_event, params: { url: string; apiKey?
 
   const rawText = await response.text();
   const trimmed = rawText.trim();
+  if (!trimmed) throw new Error('9Router tidak memberikan respon teks.');
 
-  // 1. Try standard OpenAI JSON
-  if (trimmed.startsWith('{')) {
+  // 1. Try standard OpenAI JSON (stripping any trailing SSE markers like data: [DONE])
+  let jsonCandidate = trimmed.replace(/\s*data:\s*\[DONE\]\s*$/i, '').trim();
+  if (jsonCandidate.startsWith('{')) {
+    const lastBrace = jsonCandidate.lastIndexOf('}');
+    if (lastBrace > 0) {
+      jsonCandidate = jsonCandidate.substring(0, lastBrace + 1);
+    }
     try {
-      const data = JSON.parse(trimmed);
-      const text = data?.choices?.[0]?.message?.content;
-      if (text) return text;
+      const data = JSON.parse(jsonCandidate);
+      const text =
+        data?.choices?.[0]?.message?.content ||
+        data?.choices?.[0]?.text ||
+        data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text && typeof text === 'string') return text;
     } catch {
       // Fall through to SSE chunk parser
     }
@@ -745,14 +845,19 @@ ipcMain.handle('ai:openAiRequest', async (_event, params: { url: string; apiKey?
   const lines = trimmed.split('\n');
   for (const line of lines) {
     const l = line.trim();
-    if (l.startsWith('data:') && !l.includes('[DONE]')) {
-      try {
-        const chunk = JSON.parse(l.replace(/^data:\s*/, ''));
-        const piece = chunk?.choices?.[0]?.delta?.content || chunk?.choices?.[0]?.text || '';
-        fullContent += piece;
-      } catch {
-        // ignore chunk parsing errors
-      }
+    if (!l || l.includes('[DONE]')) continue;
+    const jsonStr = l.startsWith('data:') ? l.slice(5).trim() : l;
+    if (!jsonStr.startsWith('{')) continue;
+    try {
+      const chunk = JSON.parse(jsonStr);
+      const piece =
+        chunk?.choices?.[0]?.delta?.content ||
+        chunk?.choices?.[0]?.message?.content ||
+        chunk?.choices?.[0]?.text ||
+        '';
+      fullContent += piece;
+    } catch {
+      // ignore chunk parsing errors
     }
   }
 

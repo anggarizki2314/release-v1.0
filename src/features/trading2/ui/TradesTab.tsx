@@ -107,6 +107,33 @@ export const TradesTab: React.FC = () => {
     );
   };
 
+  const handleDeleteTrade = (t: HistoryState) => {
+    const isWin = (t.profit || 0) >= 0;
+    const pnlFormatted = `${isWin ? '+' : ''}$${(t.profit || 0).toFixed(2)}`;
+    const confirmMsg = `Hapus trade ${t.direction} ${t.symbol} (Lot ${t.volume})?\n\nSaldo akan dikembalikan (${isWin ? 'dikurangi' : 'ditambahkan'} ${pnlFormatted}) ke posisi sebelum trade ini.`;
+    if (window.confirm(confirmMsg)) {
+      const success = tradingEngine.deleteHistoryTrade(t.tradeId);
+      if (success) {
+        window.dispatchEvent(
+          new CustomEvent('show-toast', { detail: `🗑️ Trade dihapus & saldo disesuaikan (${pnlFormatted})` })
+        );
+      }
+    }
+  };
+
+  const handleClearAllTrades = () => {
+    if (trades.length === 0) return;
+    const totalPnl = trades.reduce((sum, t) => sum + (t.profit || 0), 0);
+    const pnlFormatted = `${totalPnl >= 0 ? '+' : ''}$${totalPnl.toFixed(2)}`;
+    const confirmMsg = `Hapus SELURUH (${trades.length}) riwayat trade sesi ini?\n\nSaldo akan dikembalikan (${pnlFormatted}) ke posisi awal sesi.`;
+    if (window.confirm(confirmMsg)) {
+      const count = tradingEngine.clearAllHistory();
+      window.dispatchEvent(
+        new CustomEvent('show-toast', { detail: `🗑️ ${count} trade dihapus & saldo disesuaikan!` })
+      );
+    }
+  };
+
   return (
     <div className="te2-table-container">
       <table className="te2-table">
@@ -127,6 +154,26 @@ export const TradesTab: React.FC = () => {
             <th>Screenshots</th>
             <th>Opened At</th>
             <th>Closed At</th>
+            <th style={{ width: '80px', textAlign: 'center' }}>
+              {trades.length > 1 ? (
+                <button
+                  className="te2-btn-cancel"
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '10px',
+                    cursor: 'pointer',
+                    borderRadius: '3px',
+                    whiteSpace: 'nowrap',
+                  }}
+                  onClick={handleClearAllTrades}
+                  title="Hapus semua riwayat trade dan kembalikan saldo"
+                >
+                  Clear All
+                </button>
+              ) : (
+                'Action'
+              )}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -271,6 +318,23 @@ export const TradesTab: React.FC = () => {
                 </td>
                 <td>{formatTime(t.openedAt)}</td>
                 <td>{formatTime(t.closedAt)}</td>
+                <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                  <button
+                    className="te2-btn-cancel"
+                    style={{
+                      padding: '2px 6px',
+                      fontSize: '11px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      borderRadius: '4px',
+                    }}
+                    onClick={() => handleDeleteTrade(t)}
+                    title="Hapus trade ini & kembalikan saldo"
+                  >
+                    🗑️
+                  </button>
+                </td>
               </tr>
             );
           })}

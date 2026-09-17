@@ -356,6 +356,53 @@ async function callGeminiApi(
   return textContent;
 }
 
+function cleanAndExtractOpenAiText(rawText: string): string {
+  const trimmed = rawText.trim();
+  if (!trimmed) throw new Error('9Router tidak memberikan respon teks.');
+
+  // 1. Try standard OpenAI JSON (handling any trailing `data: [DONE]` from 9Router)
+  let jsonCandidate = trimmed.replace(/\s*data:\s*\[DONE\]\s*$/i, '').trim();
+  if (jsonCandidate.startsWith('{')) {
+    const lastBrace = jsonCandidate.lastIndexOf('}');
+    if (lastBrace > 0) {
+      jsonCandidate = jsonCandidate.substring(0, lastBrace + 1);
+    }
+    try {
+      const result = JSON.parse(jsonCandidate);
+      const textContent =
+        result?.choices?.[0]?.message?.content ||
+        result?.choices?.[0]?.text ||
+        result?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (textContent && typeof textContent === 'string') return textContent;
+    } catch {
+      // Fall through to SSE chunk parser
+    }
+  }
+
+  // 2. Fallback to parse SSE chunks if 9Router streamed response
+  let fullContent = '';
+  for (const line of trimmed.split('\n')) {
+    const l = line.trim();
+    if (!l || l.includes('[DONE]')) continue;
+    const jsonStr = l.startsWith('data:') ? l.slice(5).trim() : l;
+    if (!jsonStr.startsWith('{')) continue;
+    try {
+      const chunk = JSON.parse(jsonStr);
+      const piece =
+        chunk?.choices?.[0]?.delta?.content ||
+        chunk?.choices?.[0]?.message?.content ||
+        chunk?.choices?.[0]?.text ||
+        '';
+      fullContent += piece;
+    } catch {
+      // ignore chunk parse errors
+    }
+  }
+
+  if (fullContent) return fullContent;
+  throw new Error('9Router tidak memberikan respon teks. Silakan periksa koneksi 9Router.');
+}
+
 /**
  * Direct call to 9Router / OpenAI-compatible endpoint
  */
@@ -459,36 +506,7 @@ export async function call9RouterApi(
   }
 
   const rawText = await response.text();
-  const trimmed = rawText.trim();
-
-  // Try standard JSON
-  if (trimmed.startsWith('{')) {
-    try {
-      const result = JSON.parse(trimmed);
-      const textContent = result?.choices?.[0]?.message?.content;
-      if (textContent) return textContent;
-    } catch {
-      // Fall through to SSE chunk parser
-    }
-  }
-
-  // Fallback to parse SSE chunks if 9Router streamed response
-  let fullContent = '';
-  for (const line of trimmed.split('\n')) {
-    const l = line.trim();
-    if (l.startsWith('data:') && !l.includes('[DONE]')) {
-      try {
-        const chunk = JSON.parse(l.replace(/^data:\s*/, ''));
-        const piece = chunk?.choices?.[0]?.delta?.content || chunk?.choices?.[0]?.text || '';
-        fullContent += piece;
-      } catch {
-        // ignore chunk parse errors
-      }
-    }
-  }
-
-  if (fullContent) return fullContent;
-  throw new Error('9Router tidak memberikan respon teks. Silakan periksa koneksi 9Router.');
+  return cleanAndExtractOpenAiText(rawText);
 }
 
 /**
@@ -534,6 +552,25 @@ export async function testGeminiApiKey(
 }
 
 /**
+ * Extract clean trader note/confluence, filtering out automated tags like (SL Hit) or (TP Hit)
+ */
+export function extractCleanConfluence(comment: string | null | undefined): string {
+  if (!comment) return '';
+  const trimmed = comment.trim();
+  if (
+    trimmed === 'SL Hit' ||
+    trimmed === 'SL' ||
+    trimmed === 'TP Hit' ||
+    trimmed === 'TP' ||
+    trimmed === 'MANUAL_CLOSE' ||
+    trimmed === 'MANUAL'
+  ) {
+    return '';
+  }
+  return trimmed.replace(/\s*\((SL Hit|TP Hit|Manual Close)\)$/i, '').trim();
+}
+
+/**
  * Generate deep review for an individual trade (with multimodal screenshot support)
  */
 export async function generateTradeReview(
@@ -553,6 +590,8 @@ export async function generateTradeReview(
   const durationStr = durationSec < 60 ? `${durationSec} detik` : `${Math.floor(durationSec / 60)} menit`;
   const pnlStr = `${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}`;
   const reasonStr = trade.closeReason ? trade.closeReason : trade.profit >= 0 ? 'TP / Profit' : 'SL / Cut Loss';
+  const cleanConfluence = extractCleanConfluence(trade.comment);
+  const confluenceText = cleanConfluence || trade.comment || '(Trader tidak menuliskan catatan/confluence)';
 
   const prompt = `Anda adalah "TradePro Senior AI Coach", seorang prop trader kawakan dan risk manager institusional kelas dunia.
 Tugas Anda: Analisis dan berikan feedback kritis, mendalam, dan membangun atas trade berikut ini.
@@ -565,7 +604,7 @@ INFORMASI TRADE:
 - Stop Loss: ${trade.stopLoss ?? 'Tidak ada'} | Take Profit: ${trade.takeProfit ?? 'Tidak ada'}
 - Durasi Posisi Terbuka: ${durationStr}
 - Hasil Akhir: ${pnlStr} (Tutup karena: ${reasonStr})
-- Catatan / Jurnal dari Trader: "${trade.comment || '(Trader tidak menuliskan catatan refleksi)'}"
+- Catatan / Confluence Entry dari Trader: "${confluenceText}"
 ${images.length > 0 ? `\n* CATATAN: Screenshot chart terlampir. Analisis struktur candlestick, level key support/resistance, pola harga, dan letak entry/exit pada gambar chart tersebut.` : ''}
 
 INSTRUKSI FORMAT OUTPUT (Gunakan Bahasa Indonesia profesional, tegas, dan suportif):
@@ -602,11 +641,11 @@ export async function generateSessionAudit(
   providerOverride?: AiProvider
 ): Promise<string> {
   const trades: HistoryState[] = analytics?.trades || [];
+  const totalTrades = analytics?.totalTrades ?? session.totalTrades ?? trades.length;
   const winRate = (analytics?.winRate ?? session.winRate ?? 0).toFixed(1);
   const profitFactor = (analytics?.profitFactor ?? session.profitFactor ?? 0).toFixed(2);
   const netProfit = (analytics?.netProfit ?? session.netProfit ?? 0).toFixed(2);
-  const totalTrades = trades.length || session.totalTrades || 0;
-  const maxDrawdown = (analytics?.maxDrawdownDollar ?? 0).toFixed(2);
+  const maxDrawdown = Math.abs(analytics?.maxDrawdown ?? analytics?.maxDrawdownDollar ?? 0).toFixed(2);
   const maxDrawdownPct = (analytics?.maxDrawdownPercent ?? 0).toFixed(1);
 
   // Stop Loss compliance calculation
@@ -624,7 +663,9 @@ export async function generateSessionAudit(
     const durStr = durSec < 60 ? `${durSec}s` : `${Math.floor(durSec / 60)}m ${durSec % 60}s`;
     const slText = (t.stopLoss != null && Number(t.stopLoss) > 0) ? `SL: ${t.stopLoss}` : '⚠️ TANPA SL (NO SL)';
     const tpText = (t.takeProfit != null && Number(t.takeProfit) > 0) ? `TP: ${t.takeProfit}` : 'Tanpa TP';
-    return `#${idx + 1}: ${t.direction} ${t.symbol} | Lot ${t.volume} | Entry: ${t.entryPrice} -> Exit: ${t.exitPrice} | ${slText} | ${tpText} | PnL: ${isWin ? '+' : ''}$${(t.profit || 0).toFixed(2)} (${t.closeReason || 'CLOSED'}) | Durasi: ${durStr} | Note: "${t.comment || '-'}"`;
+    const userConf = extractCleanConfluence(t.comment);
+    const confStr = userConf ? ` | Confluence: "${userConf}"` : '';
+    return `#${idx + 1}: ${t.direction} ${t.symbol} | Lot ${t.volume} | Entry: ${t.entryPrice} -> Exit: ${t.exitPrice} | ${slText} | ${tpText} | PnL: ${isWin ? '+' : ''}$${(t.profit || 0).toFixed(2)} (${t.closeReason || 'CLOSED'}) | Durasi: ${durStr}${confStr}`;
   }).join('\n');
 
   const prompt = `Anda adalah "TradePro Chief Risk Officer & AI Trading Coach" untuk prop firm global.
@@ -650,14 +691,14 @@ ${sampleTrades || '(Belum ada data trade)'}
 INSTRUKSI AUDIT (Gunakan Bahasa Indonesia profesional, objektif, berwibawa layaknya evaluator prop firm):
 Berikan hasil audit dalam format markdown berikut:
 
-### 🏆 Rapor Sesi & Skor Kelulusan: [Skor 1-100] (Grade: A / B / C / D / F)
-(Berikan ringkasan performa sesi ini dalam 2 kalimat).
+### 📊 Ringkasan Eksekutif Sesi
+(2-3 kalimat evaluasi objektif mengenai disiplin eksekusi, RR, dan konsistensi risiko)
 
-### 🚨 Deteksi Kebocoran Habit & Risiko (Habit Leak Detector)
-(Analisis secara tajam: Apakah ada indikasi Revenge Trading setelah loss? Apakah overtrading? Apakah membiarkan floating loss terlalu lama sementara cut profit terlalu cepat? Konsistensi lot size? Kepatuhan Stop Loss: evaluasi apakah trader berani masuk pasar tanpa proteksi SL).
-
-### 📊 Kekuatan & Kelemahan Statistik
-(Soroti apa yang sudah bekerja sangat baik, dan titik lemah matematis yang membahayakan akun).
+### 🔍 Analisis Habit & Psikologi Trading
+- **Kepatuhan Stop Loss**: (Evaluasi kedisiplinan proteksi modal)
+- **Manajemen Ukuran Lot**: (Deteksi apakah ada over-leveraging atau lot tidak konsisten)
+- **Pola Emosi & Revenge Trading**: (Apakah ada indikasi tergesa-gesa entry setelah loss)
+- **Trade Terbaik vs Terburuk**: (Sebutkan trade nomor berapa dan alasannya)
 
 ### 🎯 3 Aturan Wajib untuk Sesi Berikutnya
 (Tulis 3 checklist konkret yang TIDAK BOLEH dilanggar oleh trader pada sesi backtest berikutnya).`;
@@ -688,10 +729,16 @@ export function buildAiSystemContext(
     const tpStr = (trade.takeProfit != null && Number(trade.takeProfit) > 0) ? `${trade.takeProfit}` : 'Tidak memasang TP';
 
     return `Anda adalah "TradePro Senior AI Coach & Risk Officer", mentor trading yang tertanam langsung di software TradePro milik trader.
-PANDUAN INTERAKSI CHAT PENTING:
-1. Anda MEMILIKI AKSES PENUH ke data trade aktual pengguna dari database sistem TradePro di bawah ini.
-2. JANGAN PERNAH berkata "saya tidak bisa melihat data Anda", "saya tidak punya akses ke broker/platform Anda", atau "saya hanya berasumsi". Data di bawah ini adalah rekaman riil dari platform.
-3. Anda BISA MELIHAT status Stop Loss secara pasti (Stop Loss: ${slStr}). Rujuk data ini secara langsung saat menjawab pertanyaan trader seputar SL, lot, timing, atau manajemen risiko.
+
+================================================================================
+ATURAN UTAMA & BEHIND PROMPT (TRADE REVIEW):
+================================================================================
+1. WAJIB BACA & BONGKAR DATA TRADE INI TERLEBIH DAHULU:
+   Setiap kali trader bertanya atau meminta review, Anda HARUS membaca dan meninjau data trade aktual di bawah ini terlebih dahulu sebelum merangkai jawaban.
+2. DILARANG MEMBERI NASIHAT UMUM/KLISE TANPA DATA:
+   Jawaban Anda HARUS selalu mengutip data faktual trade ini: Entry (${trade.entryPrice}), Exit (${trade.exitPrice}), Lot (${trade.volume}), PnL (${pnlStr}), SL (${slStr}), dan Durasi (${durationStr}).
+3. DATA INI ADALAH FAKTA VALID DARI DATABASE:
+   Data di bawah ini dicatat langsung dari platform TradePro. Jangan pernah berkata "saya tidak bisa melihat chart atau order Anda".
 
 DATA RIIL ORDER / TRADE INI:
 - Simbol / Pair: ${trade.symbol}
@@ -704,7 +751,7 @@ DATA RIIL ORDER / TRADE INI:
 - Hasil PnL: ${pnlStr}
 - Alasan Penutupan: ${trade.closeReason || 'MANUAL'}
 - Durasi Posisi: ${durationStr}
-- Catatan / Refleksi Trader: "${trade.comment || '-'}"`;
+- Catatan / Confluence Entry: "${extractCleanConfluence(trade.comment) || trade.comment || '(Tidak ada catatan / confluence)'}"`;
   }
 
   if (mode === 'session' && session) {
@@ -713,37 +760,100 @@ DATA RIIL ORDER / TRADE INI:
     const profitFactor = (analytics?.profitFactor ?? session.profitFactor ?? 0).toFixed(2);
     const netProfit = (analytics?.netProfit ?? session.netProfit ?? 0).toFixed(2);
     const totalTrades = trades.length || session.totalTrades || 0;
+    const winningTrades = analytics?.winningTrades ?? session.winningTrades ?? trades.filter(t => (t.profit || 0) > 0).length;
+    const losingTrades = analytics?.losingTrades ?? session.losingTrades ?? trades.filter(t => (t.profit || 0) < 0).length;
+    const breakevenTrades = analytics?.breakevenTrades ?? trades.filter(t => (t.profit || 0) === 0).length;
     const tradesWithSL = trades.filter(t => t.stopLoss != null && Number(t.stopLoss) > 0).length;
     const tradesWithoutSL = totalTrades - tradesWithSL;
     const slCompliancePct = totalTrades > 0 ? ((tradesWithSL / totalTrades) * 100).toFixed(1) : '0';
-    const maxDrawdown = (analytics?.maxDrawdownDollar ?? 0).toFixed(2);
+    const maxDrawdown = Math.abs(analytics?.maxDrawdown ?? analytics?.maxDrawdownDollar ?? 0).toFixed(2);
     const maxDrawdownPct = (analytics?.maxDrawdownPercent ?? 0).toFixed(1);
+    const avgRR = analytics?.avgRR ? `1:${analytics.avgRR.toFixed(2)}` : '-';
+    const avgWin = analytics?.avgWin ? `$${analytics.avgWin.toFixed(2)}` : '-';
+    const avgLoss = analytics?.avgLoss ? `-$${Math.abs(analytics.avgLoss).toFixed(2)}` : '-';
+    const largestWin = analytics?.largestWin ? `$${analytics.largestWin.toFixed(2)}` : '-';
+    const largestLoss = analytics?.largestLoss ? `-$${Math.abs(analytics.largestLoss).toFixed(2)}` : '-';
+    const streakLoss = analytics?.maxConsecutiveLosses ?? 0;
+    const streakWin = analytics?.maxConsecutiveWins ?? 0;
+    const buyTrades = analytics?.buyTradesCount ?? trades.filter(t => t.direction === 'BUY').length;
+    const sellTrades = analytics?.sellTradesCount ?? trades.filter(t => t.direction === 'SELL').length;
+    const buyWinRate = analytics?.buyWinRate != null ? `${analytics.buyWinRate.toFixed(1)}%` : '-';
+    const sellWinRate = analytics?.sellWinRate != null ? `${analytics.sellWinRate.toFixed(1)}%` : '-';
+
+    let pairSummary = '';
+    if (analytics?.pairBreakdowns && analytics.pairBreakdowns.length > 0) {
+      pairSummary = '\n- Breakdown Pair:\n' + analytics.pairBreakdowns
+        .map((p: any) => `  * ${p.symbol}: ${p.tradesCount} trade (Winrate ${p.winRate.toFixed(1)}%, Net PnL ${p.netProfit >= 0 ? '+' : ''}$${p.netProfit.toFixed(2)}, PF ${p.profitFactor.toFixed(2)})`)
+        .join('\n');
+    }
+
+    let challengeSummary = '';
+    if (session.mode === 'challenge' && (session.challengeRules || session.challengeStatus)) {
+      const rules = session.challengeRules;
+      const status = session.challengeStatus;
+      const isTargetPassed = status && rules && status.targetCurrent >= status.targetLimit;
+      const isDailyFailed = status && rules && status.dailyLossCurrent >= status.dailyLossLimit;
+      const isMaxFailed = status && rules && status.maxLossCurrent >= status.maxLossLimit;
+      const challengeState = (isDailyFailed || isMaxFailed) ? '❌ GAGAL' : isTargetPassed ? '✅ LOLOS' : '⏳ BERJALAN';
+
+      challengeSummary = `\n- Status Challenge Prop Firm:
+  * Target Profit: ${rules?.profitTargetPercent ?? 10}% (Tercapai: $${status?.targetCurrent?.toFixed(2) ?? '0'} / $${status?.targetLimit?.toFixed(2) ?? '0'})
+  * Batas Max Daily Loss: ${rules?.dailyLossPercent ?? 5}% (Loss Hari Ini: $${status?.dailyLossCurrent?.toFixed(2) ?? '0'} / $${status?.dailyLossLimit?.toFixed(2) ?? '0'})
+  * Batas Max Drawdown: ${rules?.maxLossPercent ?? 10}% (Loss Kumulatif: $${status?.maxLossCurrent?.toFixed(2) ?? '0'} / $${status?.maxLossLimit?.toFixed(2) ?? '0'})
+  * Status: ${challengeState}`;
+    }
 
     const tradesList = trades.map((t, idx) => {
       const isWin = (t.profit || 0) > 0;
+      const isLoss = (t.profit || 0) < 0;
+      const statusText = isWin ? 'WIN' : isLoss ? 'LOSS' : 'BE';
       const durSec = Math.max(0, Math.floor(((t.closedAt || 0) - (t.openedAt || 0)) / 1000));
       const durStr = durSec < 60 ? `${durSec}s` : `${Math.floor(durSec / 60)}m ${durSec % 60}s`;
       const sl = (t.stopLoss != null && Number(t.stopLoss) > 0) ? `SL: ${t.stopLoss}` : '⚠️ TANPA SL (NO SL)';
       const tp = (t.takeProfit != null && Number(t.takeProfit) > 0) ? `TP: ${t.takeProfit}` : 'Tanpa TP';
-      return `#${idx + 1}: ${t.direction} ${t.symbol} | Lot ${t.volume} | Entry ${t.entryPrice} -> Exit ${t.exitPrice} | ${sl} | ${tp} | PnL: ${isWin ? '+' : ''}$${(t.profit || 0).toFixed(2)} [${t.closeReason || 'MANUAL'}] | Durasi: ${durStr} | Note: "${t.comment || '-'}"`;
+      const userConf = extractCleanConfluence(t.comment);
+      const confStr = userConf ? ` | Confluence: "${userConf}"` : '';
+      return `Trade #${idx + 1} [${statusText}]: ${t.direction} ${t.symbol} | Lot ${t.volume} | Entry ${t.entryPrice} -> Exit ${t.exitPrice} | ${sl} | ${tp} | PnL: ${isWin ? '+' : ''}$${(t.profit || 0).toFixed(2)} [Exit: ${t.closeReason || 'MANUAL'}] | Durasi: ${durStr}${confStr}`;
     }).join('\n');
 
     return `Anda adalah "TradePro Senior AI Coach & Chief Risk Officer", mentor trading yang tertanam langsung di software TradePro milik trader.
-PANDUAN INTERAKSI CHAT PENTING:
-1. Anda MEMILIKI AKSES LENGKAP ke seluruh riwayat order dan statistik sesi backtest pengguna di bawah ini.
-2. JANGAN PERNAH berkata "saya tidak bisa melihat data Anda", "saya tidak punya akses ke broker/platform Anda", atau "saya hanya berasumsi". Semua data di bawah ini adalah data riil dan valid dari database TradePro.
-3. Anda BISA MELIHAT dengan pasti apakah trader memakai Stop Loss (SL) atau tidak di setiap trade. Ada ${tradesWithSL} trade memakai SL dan ${tradesWithoutSL} trade TANPA SL (${slCompliancePct}% kepatuhan SL).
-4. Jawab pertanyaan trader dengan ramah, lugas, jujur, dan selalu rujuk data log trade di bawah jika ditanya mengenai eksekusi, SL, lot, atau psikologi trading.
 
-DATA STATISTIK SESI BACKTEST:
+================================================================================
+ATURAN UTAMA & BEHIND PROMPT ANALYTICS:
+================================================================================
+1. WAJIB BACA & ANALISIS DATA SESI TERLEBIH DAHULU:
+   Setiap kali trader bertanya, meminta evaluasi, mencari solusi, atau berdiskusi apa pun di Analytics, Anda HARUS membaca dan meneliti data statistik serta log trade sesi ini TERLEBIH DAHULU sebelum menjawab.
+2. DILARANG MEMBERIKAN JAWABAN UMUM / KLISE TANPA DATA:
+   - Dilarang memberikan nasihat mengambang (misal: "Anda harus disiplin", "gunakan RR 1:2", "kendalikan emosi") tanpa menghubungkannya langsung ke data sesi ini.
+   - Setiap jawaban Anda WAJIB mengutip angka faktual dan trade riil dari sesi ini:
+     * Rujuk nomor trade spesifik (misal: "Pada Trade #2 dan #5...", "Di Trade #1 BUY lot 0.21...").
+     * Rujuk angka statistik sesi (Winrate ${winRate}%, Net PnL $${netProfit}, Drawdown -$${maxDrawdown}, Kepatuhan SL ${slCompliancePct}%).
+     * Analisis disparitas performa BUY (${buyWinRate}) vs SELL (${sellWinRate}), atau breakdown pair jika multi-pair.
+3. DATA INI ADALAH FAKTA VALID DARI DATABASE:
+   Semua data di bawah ini adalah rekaman platform TradePro. Jangan pernah berkata "saya tidak bisa melihat chart atau data Anda". Anda memiliki akses penuh ke data database di bawah ini.
+4. ANALISIS CATATAN & CONFLUENCE ENTRY TRADER:
+   - Perhatikan keterangan "Confluence: ..." pada setiap trade di bawah. Jika trader mencatat alasan entry / confluence analisanya (misal: FVG, CHoCH, Break of Structure, Sweep Liquidity, Rejection SnR, Trendline, dsb.), jadikan itu rujukan penting:
+     * Evaluasi apakah setup confluence tersebut tervalidasi atau gagal di market.
+     * Evaluasi apakah trader konsisten mengeksekusi sesuai confluence-nya atau menyimpang (FOMO / impulsif).
+     * Berikan feedback tajam mengenai kualitas confluence trader pada trade yang menang maupun kalah.
+5. GAYA BICARA:
+   Mentor trading senior prop firm: objektif, lugas, jujur, solutif, kritis terhadap kebiasaan buruk (over-lot, revenge trading, no SL), dan selalu berbahasa Indonesia dengan natural.
+
+DATA LENGKAP STATISTIK SESI BACKTEST:
 - Sesi: "${session.name}" (${session.symbol})
 - Mode: ${session.mode === 'challenge' ? 'Prop Firm Challenge' : 'Normal Replay'}
-- Total Trade: ${totalTrades} (Menang: ${analytics?.winningTrades ?? 0}, Kalah: ${analytics?.losingTrades ?? 0})
+- Saldo: Awal $${session.initialBalance || 10000} | Hasil Bersih $${netProfit}
+- Total Trade: ${totalTrades} (Menang: ${winningTrades}, Kalah: ${losingTrades}${breakevenTrades > 0 ? `, BE: ${breakevenTrades}` : ''})
 - Win Rate: ${winRate}% | Profit Factor: ${profitFactor} | Net PnL: $${netProfit}
 - Max Drawdown: -$${maxDrawdown} (${maxDrawdownPct}%)
-- Disiplin Stop Loss: ${tradesWithSL}/${totalTrades} trade memakai SL (${slCompliancePct}%). ${tradesWithoutSL > 0 ? `PERINGATAN: ${tradesWithoutSL} trade dieksekusi TANPA Stop Loss!` : 'Semua trade diproteksi Stop Loss.'}
+- Disiplin Stop Loss: ${tradesWithSL}/${totalTrades} trade memakai SL (${slCompliancePct}%). ${tradesWithoutSL > 0 ? `⚠️ PERINGATAN: ${tradesWithoutSL} trade dieksekusi TANPA Stop Loss!` : '✅ Semua trade diproteksi Stop Loss.'}
+- Rata-rata Risk-Reward (RR): ${avgRR}
+- Rata-rata Win: ${avgWin} | Rata-rata Loss: ${avgLoss}
+- Win Terbesar: ${largestWin} | Loss Terbesar: ${largestLoss}
+- Streak Loss Terpanjang: ${streakLoss}x berturut-turut | Streak Win: ${streakWin}x
+- Eksekusi BUY: ${buyTrades} trade (Winrate: ${buyWinRate}) | SELL: ${sellTrades} trade (Winrate: ${sellWinRate})${pairSummary}${challengeSummary}
 
-LOG LENGKAP DAFTAR TRADE DALAM SESI INI:
+LOG LENGKAP SELURUH TRADE DALAM SESI INI:
 ${tradesList || '(Belum ada log trade)'}`;
   }
 
@@ -783,10 +893,27 @@ export async function sendAIChatMessage(
       });
     }
     for (const m of messages) {
-      formattedMessages.push({
-        role: m.role,
-        content: m.content,
-      });
+      if (
+        m.role === 'assistant' &&
+        (m.content.startsWith('⚠️') ||
+          m.content.startsWith('9Router error.') ||
+          m.content.includes('Gagal menghubungi') ||
+          m.content.includes('Coach mati'))
+      ) {
+        continue;
+      }
+      const text = m.content.trim();
+      if (!text) continue;
+      const role = m.role === 'assistant' ? 'assistant' : 'user';
+
+      if (formattedMessages.length > 0 && formattedMessages[formattedMessages.length - 1].role === role && role === 'user') {
+        formattedMessages[formattedMessages.length - 1].content += `\n\n${text}`;
+      } else {
+        formattedMessages.push({
+          role,
+          content: text,
+        });
+      }
     }
 
     // 1. If running in Electron, use native IPC bridge
@@ -844,30 +971,7 @@ export async function sendAIChatMessage(
     }
 
     const rawText = await response.text();
-    const trimmed = rawText.trim();
-
-    if (trimmed.startsWith('{')) {
-      try {
-        const result = JSON.parse(trimmed);
-        const textContent = result?.choices?.[0]?.message?.content;
-        if (textContent) return textContent;
-      } catch {}
-    }
-
-    let fullContent = '';
-    for (const line of trimmed.split('\n')) {
-      const l = line.trim();
-      if (l.startsWith('data:') && !l.includes('[DONE]')) {
-        try {
-          const chunk = JSON.parse(l.replace(/^data:\s*/, ''));
-          const piece = chunk?.choices?.[0]?.delta?.content || chunk?.choices?.[0]?.text || '';
-          fullContent += piece;
-        } catch {}
-      }
-    }
-
-    if (fullContent) return fullContent;
-    throw new Error('9Router tidak memberikan respon teks.');
+    return cleanAndExtractOpenAiText(rawText);
   }
 
   // Provider = Gemini
@@ -878,13 +982,47 @@ export async function sendAIChatMessage(
   const model = modelOverride || getStoredModel();
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-  const contents = messages.map((m) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }],
-  }));
+  // Filter out any error bubbles from assistant
+  const filtered = messages.filter(
+    (m) =>
+      !(
+        m.role === 'assistant' &&
+        (m.content.startsWith('⚠️') ||
+          m.content.startsWith('9Router error.') ||
+          m.content.includes('Gagal menghubungi') ||
+          m.content.includes('Coach mati'))
+      )
+  );
+
+  // Gemini strictly requires alternating roles: user -> model -> user -> model...
+  // Merge consecutive same-role turns into one combined turn so Gemini never throws HTTP 400
+  const validContents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+  for (const m of filtered) {
+    const role: 'user' | 'model' = m.role === 'assistant' ? 'model' : 'user';
+    const text = m.content.trim();
+    if (!text) continue;
+
+    if (validContents.length > 0 && validContents[validContents.length - 1].role === role) {
+      validContents[validContents.length - 1].parts[0].text += `\n\n${text}`;
+    } else {
+      validContents.push({
+        role,
+        parts: [{ text }],
+      });
+    }
+  }
+
+  // Ensure first turn is always from user
+  while (validContents.length > 0 && validContents[0].role !== 'user') {
+    validContents.shift();
+  }
+
+  if (validContents.length === 0) {
+    throw new Error('Pesan pertanyaan tidak boleh kosong.');
+  }
 
   const requestBody: any = {
-    contents,
+    contents: validContents,
     generationConfig: {
       temperature: 0.4,
       maxOutputTokens: 2500,

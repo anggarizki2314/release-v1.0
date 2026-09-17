@@ -647,6 +647,57 @@ export class TradingEngineService {
     }
   }
 
+  /**
+   * Deletes a trade from history and reverts its realized profit/loss from account balance.
+   */
+  public deleteHistoryTrade(tradeId: string): boolean {
+    const history = this.store.getHistory();
+    const trade = history.find((h) => h.tradeId === tradeId);
+    if (!trade) return false;
+
+    // 1. Revert realized PnL from account balance
+    const profitToRevert = trade.profit || 0;
+    if (profitToRevert !== 0) {
+      // Revert profit: if profit was +100, we apply -100. If profit was -50, we apply +50.
+      this.accountManager.applyRealizedPnL(-profitToRevert, `Revert Deleted Trade: ${tradeId}`);
+    }
+
+    // 2. Remove from TradingStore history
+    this.store.removeHistory(tradeId);
+
+    // 3. Remove from ClosedPositionRepository if positionId exists
+    if (trade.positionId) {
+      this.closedPositionRepository.removeClosedPosition(trade.positionId);
+    }
+
+    // 4. Persist updated trading state & notify listeners
+    this.onTradingStateMutation();
+    return true;
+  }
+
+  /**
+   * Clears all trade history and reverts all cumulative realized profit/loss from account balance.
+   */
+  public clearAllHistory(): number {
+    const history = [...this.store.getHistory()];
+    if (history.length === 0) return 0;
+
+    let totalProfitToRevert = 0;
+    history.forEach((h) => {
+      totalProfitToRevert += (h.profit || 0);
+    });
+
+    if (totalProfitToRevert !== 0) {
+      this.accountManager.applyRealizedPnL(-totalProfitToRevert, 'Revert All History Trades');
+    }
+
+    this.store.clearHistory();
+    this.closedPositionRepository.clear();
+
+    this.onTradingStateMutation();
+    return history.length;
+  }
+
   public attachScreenshotToPosition(positionId: string, dataUrl: string, timeframe: string): void {
     const pos = this.positionManager.getPosition(positionId) || 
                 this.positionManager.getOpenPositions().find(p => p.positionId === positionId);

@@ -109,4 +109,23 @@ assert(hOnH1 === 88, `Bottom height on H1 is 88px (got ${hOnH1})`);
 const hOnW1 = calculateBottomIndicatorsHeight([rsiOnMinutesOnly, dayeOnHoursOnly], 88, 130, 'W1');
 assert(hOnW1 === 0, `Bottom height on W1 is 0px (got ${hOnW1})`);
 
+// Test 5: Granular Min/Max ranges per timeframe unit
+const customRangeVis: IndicatorVisibility = {
+  minutes: { enabled: true, min: 5, max: 30 },
+  hours: { enabled: true, min: 2, max: 4 },
+  days: { enabled: false, min: 1, max: 366 },
+};
+
+assert(isIndicatorVisibleOnTimeframe(customRangeVis, 'M1') === false, 'Custom range [5, 30] hidden on M1 (value 1)');
+assert(isIndicatorVisibleOnTimeframe(customRangeVis, 'M5') === true, 'Custom range [5, 30] visible on M5 (value 5)');
+assert(isIndicatorVisibleOnTimeframe(customRangeVis, 'M15') === true, 'Custom range [5, 30] visible on M15 (value 15)');
+assert(isIndicatorVisibleOnTimeframe(customRangeVis, 'M30') === true, 'Custom range [5, 30] visible on M30 (value 30)');
+assert(isIndicatorVisibleOnTimeframe(customRangeVis, 'M45') === false, 'Custom range [5, 30] hidden on M45 (value 45)');
+
+assert(isIndicatorVisibleOnTimeframe(customRangeVis, 'H1') === false, 'Custom range [2, 4] hidden on H1 (value 1)');
+assert(isIndicatorVisibleOnTimeframe(customRangeVis, 'H4') === true, 'Custom range [2, 4] visible on H4 (value 4)');
+assert(isIndicatorVisibleOnTimeframe(customRangeVis, 'H7') === false, 'Custom range [2, 4] hidden on H7 (value 7)');
+
+assert(isIndicatorVisibleOnTimeframe(customRangeVis, 'D1') === false, 'Disabled unit days is hidden on D1 even if min=1');
+
 console.log('\nAll Timeframe Visibility Tests Passed Successfully!');

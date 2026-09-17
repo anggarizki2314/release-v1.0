@@ -67,11 +67,20 @@ export const SettingsView: React.FC = () => {
     message?: string;
   } | null>(null);
 
+  // Fetch version & license only once when Settings mounts
   useEffect(() => {
-    getDbInfo().then(setDbInfo).catch((err) => console.error('[Settings] Failed to fetch db info:', err));
     window.forexReplay?.getVersion?.().then(setAppVersion).catch(() => {});
     window.forexReplay?.checkLicense?.().then(setLicenseInfo).catch(() => {});
-  }, [activeTab]);
+  }, []);
+
+  // Lazy-load database info ONLY when the Database tab is opened
+  useEffect(() => {
+    if (activeTab === 'database' && !dbInfo) {
+      getDbInfo()
+        .then(setDbInfo)
+        .catch((err) => console.error('[Settings] Failed to fetch db info:', err));
+    }
+  }, [activeTab, dbInfo]);
 
   const handleAutoDetectCombos = useCallback(async (urlToUse?: string) => {
     setDetectingCombos(true);

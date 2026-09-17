@@ -1063,8 +1063,20 @@ export interface DatabaseInfo {
   totalCandles: number;
 }
 
-/** Full database metadata for the info panel. */
-export function getDatabaseInfo(): DatabaseInfo {
+let cachedDbInfo: { info: DatabaseInfo; timestamp: number } | null = null;
+
+/** Invalidate cached database info (call when candles/symbols change) */
+export function invalidateDbInfoCache(): void {
+  cachedDbInfo = null;
+}
+
+/** Full database metadata for the info panel (cached for 30 seconds). */
+export function getDatabaseInfo(forceRefresh = false): DatabaseInfo {
+  const now = Date.now();
+  if (!forceRefresh && cachedDbInfo && now - cachedDbInfo.timestamp < 30_000) {
+    return cachedDbInfo.info;
+  }
+
   const database = getDatabase();
   const dbPath = path.join(database.name);
 
@@ -1084,7 +1096,7 @@ export function getDatabaseInfo(): DatabaseInfo {
   const datasets = database.prepare('SELECT COUNT(*) as cnt FROM datasets').get() as { cnt: number };
   const candles = database.prepare('SELECT COUNT(*) as cnt FROM candles').get() as { cnt: number };
 
-  return {
+  const info: DatabaseInfo = {
     dbPath,
     sqliteVersion: sqliteRow.ver,
     dbSizeBytes,
@@ -1093,6 +1105,9 @@ export function getDatabaseInfo(): DatabaseInfo {
     totalDatasets: datasets.cnt,
     totalCandles: candles.cnt,
   };
+
+  cachedDbInfo = { info, timestamp: now };
+  return info;
 }
 
 /** Vacuum the database — reclaims unused space. Returns true on success. */

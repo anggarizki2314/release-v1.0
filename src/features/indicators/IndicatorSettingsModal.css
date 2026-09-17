@@ -26,7 +26,7 @@
 
 .tv-settings-modal {
   width: 92%;
-  max-width: 470px;
+  max-width: 480px;
   background: #1e222d;
   border: 1px solid #2a2e39;
   border-radius: 8px;
@@ -474,3 +474,142 @@
 .tv-btn-ok:hover {
   background: #e0e3eb;
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Timeframe Visibility Tab (TradingView Style)
+   ───────────────────────────────────────────────────────────────────── */
+.tv-visibility-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 8px;
+}
+
+.tv-visibility-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+  transition: opacity 0.15s ease;
+}
+
+.tv-visibility-row.is-disabled {
+  opacity: 0.4;
+}
+
+.tv-vis-label {
+  width: 82px;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.tv-vis-label-full {
+  margin: 0;
+}
+
+.tv-vis-num-input {
+  width: 60px;
+  height: 32px;
+  background: #131722;
+  border: 1px solid #363a45;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 0 4px 0 8px;
+  outline: none;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tv-vis-num-input:focus {
+  border-color: #2962ff;
+  box-shadow: 0 0 0 1px #2962ff;
+}
+
+.tv-vis-num-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.tv-vis-slider-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 100px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tv-vis-slider-wrapper.is-disabled {
+  pointer-events: none;
+}
+
+.tv-vis-slider-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #363a45;
+  border-radius: 2px;
+}
+
+.tv-vis-slider-fill {
+  position: absolute;
+  height: 4px;
+  background: #d1d4dc;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.tv-vis-range-thumb {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  outline: none;
+}
+
+.tv-vis-range-thumb::-webkit-slider-thumb {
+  pointer-events: auto;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #1e222d;
+  border: 3.5px solid #ffffff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  transition: transform 0.1s ease;
+}
+
+.tv-vis-range-thumb::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.tv-vis-range-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #1e222d;
+  border: 3.5px solid #ffffff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  transition: transform 0.1s ease;
+}
+
+.tv-vis-range-thumb::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+

@@ -97,6 +97,35 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
   }, [showModelMenu]);
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
+
+  // Dynamic realistic progress animation for modal loading bar
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (loading) {
+      setLoadingProgress(8);
+      timer = setInterval(() => {
+        setLoadingProgress((prev) => {
+          if (prev < 25) {
+            return prev + Math.floor(Math.random() * 4 + 3);
+          } else if (prev < 55) {
+            return prev + Math.floor(Math.random() * 3 + 2);
+          } else if (prev < 82) {
+            return prev + Math.floor(Math.random() * 2 + 1);
+          } else if (prev < 94) {
+            return prev + 1;
+          }
+          return prev;
+        });
+      }, 150);
+    } else {
+      setLoadingProgress(0);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [loading]);
+
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
@@ -127,6 +156,17 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
     }
     return null;
   }, [mode, trade?.tradeId, (trade as any)?.ticket, trade?.symbol, trade?.openedAt, session?.id, session?.name]);
+
+  // Unique storage key for tracking last audited trade count in this session
+  const getTradeCountStorageKey = useCallback((): string | null => {
+    if (mode === 'session') {
+      const id = session?.id || session?.name;
+      return id ? `tradepro_ai_trade_count_session_${id}` : null;
+    }
+    return null;
+  }, [mode, session?.id, session?.name]);
+
+  const [lastTradeCount, setLastTradeCount] = useState<number>(0);
 
   // Persist chat messages whenever they change
   useEffect(() => {
@@ -183,6 +223,22 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
         setAwaitingComboSelection(false);
         setError(null);
         setShowKeyCard(false);
+
+        // Restore or initialize last audited trade count
+        const countKey = getTradeCountStorageKey();
+        if (countKey) {
+          try {
+            const savedCount = localStorage.getItem(countKey);
+            if (savedCount !== null) {
+              const num = parseInt(savedCount, 10);
+              if (!isNaN(num)) setLastTradeCount(num);
+            } else {
+              const cur = analytics?.trades?.length ?? analytics?.totalTrades ?? session?.totalTrades ?? 0;
+              setLastTradeCount(cur);
+              localStorage.setItem(countKey, cur.toString());
+            }
+          } catch {}
+        }
 
         // Populate detected combos in background for header switcher
         if (activeProv === '9router') {
@@ -306,9 +362,23 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
         } else {
           throw new Error('Data trade atau session tidak ditemukan untuk dianalisis.');
         }
+        setLoadingProgress(100);
+        await new Promise((r) => setTimeout(r, 260));
         setResult(textResult);
         setChatMessages([{ role: 'assistant', content: textResult }]);
         setShowKeyCard(false);
+
+        // Record initial trade count after analysis
+        const initialCount = mode === 'session'
+          ? (analytics?.trades?.length ?? analytics?.totalTrades ?? session?.totalTrades ?? 0)
+          : 1;
+        setLastTradeCount(initialCount);
+        const countKey = getTradeCountStorageKey();
+        if (countKey) {
+          try {
+            localStorage.setItem(countKey, initialCount.toString());
+          } catch {}
+        }
       } catch (err: any) {
         console.error('[AICoachModal] Analysis failed:', err);
         setError(err?.message || `Gagal memperoleh respon dari ${activeProv === '9router' ? '9Router' : 'Gemini AI'}.`);
@@ -317,11 +387,13 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
         setLoading(false);
       }
     },
-    [mode, trade, session, analytics, currentModel, provider, selected9RouterModel]
+    [mode, trade, session, analytics, currentModel, provider, selected9RouterModel, getTradeCountStorageKey]
   );
 
-  const handleSendChat = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendChat = async (e?: React.SyntheticEvent) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
     const trimmed = chatInput.trim();
     if (!trimmed || sendingChat || loading) return;
 
@@ -336,8 +408,50 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
       const keyToUse = activeProv === 'gemini' ? (apiKey || inputKey) : (routerKey || getStored9RouterApiKey());
       const modelToUse = activeProv === '9router' ? selected9RouterModel : currentModel;
       const systemContext = buildAiSystemContext(mode, trade, session, analytics);
-      const reply = await sendAIChatMessage(nextHistory, activeProv, keyToUse, modelToUse, systemContext);
+
+      const currentTradeCount = mode === 'session'
+        ? (analytics?.trades?.length ?? analytics?.totalTrades ?? session?.totalTrades ?? 0)
+        : 1;
+
+      // Behind Prompt HANYA ditambahkan jika data trade bertambah (currentTradeCount > lastTradeCount)
+      const hasNewTrades = currentTradeCount > lastTradeCount;
+
+      let behindPrompt = '';
+      if (hasNewTrades) {
+        const prevCount = lastTradeCount;
+        if (prevCount === 0) {
+          behindPrompt = mode === 'session'
+            ? `\n\n[Behind Prompt - Instruksi AI Coach]: BACA dan telaah data sesi backtest trader di atas terlebih dahulu. Jawab pertanyaan di atas dengan WAJIB merujuk data konkret sesi ini (seperti nomor trade spesifik #..., angka winrate, net PnL, kepatuhan SL, rasio lot, serta Catatan / Confluence yang ditulis trader pada log trade). Jangan berikan nasihat umum/klise tanpa bukti data dari sesi ini.`
+            : `\n\n[Behind Prompt - Instruksi AI Coach]: BACA data trade ini terlebih dahulu (Entry, Exit, SL, TP, PnL, Lot, Durasi, serta Catatan / Confluence dari trader). Jawab pertanyaan di atas dengan merujuk data faktual dan confluence trade tersebut secara spesifik.`;
+        } else {
+          const tradeDiff = currentTradeCount - prevCount;
+          const rangeText = tradeDiff === 1
+            ? `trade terbaru (#${currentTradeCount})`
+            : `trade-trade terbaru (#${prevCount + 1} s/d #${currentTradeCount})`;
+          behindPrompt = `\n\n[Behind Prompt - Update Data Trade Baru]: Terdeteksi penambahan ${tradeDiff} data trade baru dalam sesi ini (Total trade sekarang: ${currentTradeCount}, sebelumnya: ${prevCount}). BACA dan telaah ${rangeText} serta perubahan statistik sesi ini terlebih dahulu. Evaluasi hasil eksekusi, PnL, kepatuhan SL, dan catatan / confluence entry trader pada trade baru tersebut!`;
+        }
+      }
+
+      // Behind Prompt: hanya disematkan di belakang pertanyaan jika ada penambahan trade baru
+      const messagesForAi = nextHistory.map((m, idx) => {
+        if (idx === nextHistory.length - 1 && m.role === 'user' && behindPrompt) {
+          return { role: m.role, content: `${m.content}${behindPrompt}` };
+        }
+        return m;
+      });
+
+      const reply = await sendAIChatMessage(messagesForAi, activeProv, keyToUse, modelToUse, systemContext);
       setChatMessages([...nextHistory, { role: 'assistant', content: reply }]);
+
+      if (hasNewTrades || currentTradeCount < lastTradeCount) {
+        setLastTradeCount(currentTradeCount);
+        const countKey = getTradeCountStorageKey();
+        if (countKey) {
+          try {
+            localStorage.setItem(countKey, currentTradeCount.toString());
+          } catch {}
+        }
+      }
     } catch (chatErr: any) {
       console.error('[AICoachModal] Chat error:', chatErr);
       setChatMessages([
@@ -421,6 +535,15 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
         console.warn('[AICoachModal] Failed to remove chat key:', e);
       }
     }
+    const countKey = getTradeCountStorageKey();
+    if (countKey) {
+      try {
+        localStorage.removeItem(countKey);
+      } catch (e) {
+        console.warn('[AICoachModal] Failed to remove trade count key:', e);
+      }
+    }
+    setLastTradeCount(0);
     setChatMessages([]);
     setResult(null);
     setError(null);
@@ -474,7 +597,7 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
       } else if (trimmed.startsWith('## ')) {
         const title = trimmed.replace('## ', '');
         elements.push(
-          <h2 key={`h2-${index}`} style={{ fontSize: '16px', fontWeight: 700, margin: '14px 0 6px 0', color: '#8b5cf6' }}>
+          <h2 key={`h2-${index}`} style={{ fontSize: '15px', fontWeight: 600, margin: '14px 0 6px 0', color: '#f8fafc' }}>
             {title}
           </h2>
         );
@@ -519,18 +642,8 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
         {/* Header */}
         <header className="ai-modal-header">
           <div className="ai-modal-title-wrap">
-            <div
-              className="ai-modal-badge-icon"
-              style={{
-                background: provider === '9router'
-                  ? 'linear-gradient(135deg, #0891b2 0%, #0284c7 100%)'
-                  : 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
-                boxShadow: provider === '9router'
-                  ? '0 0 16px rgba(8, 145, 178, 0.4)'
-                  : '0 0 16px rgba(124, 58, 237, 0.4)',
-              }}
-            >
-              {provider === '9router' ? <Server size={20} /> : <Sparkles size={20} />}
+            <div className="ai-modal-badge-icon">
+              {provider === '9router' ? <Server size={18} /> : <Sparkles size={18} />}
             </div>
             <div>
               <h2 className="ai-modal-title">
@@ -547,30 +660,19 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
           </div>
 
           <div className="ai-modal-header-actions">
-            {/* Model / Combo Dropdown Menu (Styled like user screenshot) */}
+            {/* Model / Combo Dropdown Menu */}
             <div ref={modelMenuRef} style={{ position: 'relative' }}>
               <button
                 type="button"
                 className="ai-modal-model-pill"
                 onClick={() => setShowModelMenu(!showModelMenu)}
                 title="Pilih model atau profil combo"
-                style={{
-                  cursor: 'pointer',
-                  borderColor: provider === '9router' ? 'rgba(6, 182, 212, 0.4)' : 'rgba(139, 92, 246, 0.3)',
-                  color: provider === '9router' ? '#22d3ee' : '#c4b5fd',
-                  background: provider === '9router' ? 'rgba(6, 182, 212, 0.15)' : 'rgba(139, 92, 246, 0.15)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontWeight: 600,
-                  padding: '4px 10px',
-                }}
               >
-                <span>{provider === '9router' ? `⚡ ${selected9RouterModel || 'opencode2'}` : `✨ ${currentModel}`}</span>
+                <span>{provider === '9router' ? (selected9RouterModel || 'opencode2') : currentModel}</span>
                 <ChevronDown
                   size={13}
                   style={{
-                    opacity: 0.8,
+                    opacity: 0.7,
                     transform: showModelMenu ? 'rotate(180deg)' : 'none',
                     transition: 'transform 0.15s ease',
                   }}
@@ -584,25 +686,24 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                     position: 'absolute',
                     top: 'calc(100% + 6px)',
                     right: 0,
-                    width: '290px',
-                    maxHeight: '400px',
+                    width: '280px',
+                    maxHeight: '380px',
                     overflowY: 'auto',
-                    backgroundColor: '#181a20',
-                    border: '1px solid #2b313a',
-                    borderRadius: '10px',
-                    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                    backgroundColor: '#161822',
+                    border: '1px solid #282d3c',
+                    borderRadius: '8px',
+                    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.6)',
                     padding: '8px',
                     zIndex: 9999,
                     animation: 'fadeIn 0.15s ease',
                   }}
                 >
-                  {/* Top Title like user screenshot: "Model" */}
                   <div
                     style={{
                       padding: '4px 8px 8px 8px',
                       fontSize: '11px',
-                      fontWeight: 700,
-                      color: '#94a3b8',
+                      fontWeight: 600,
+                      color: '#8490a5',
                       letterSpacing: '0.5px',
                       textTransform: 'uppercase',
                       display: 'flex',
@@ -626,14 +727,14 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                         style={{
                           background: 'transparent',
                           border: 'none',
-                          color: '#22d3ee',
+                          color: '#94a3b8',
                           fontSize: '10px',
                           cursor: 'pointer',
                           padding: 0,
                           display: 'flex',
                           alignItems: 'center',
                           gap: '3px',
-                          fontWeight: 600,
+                          fontWeight: 500,
                         }}
                         title="Pindai ulang daftar combo 9Router"
                       >
@@ -652,15 +753,15 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                         flex: 1,
                         padding: '5px 8px',
                         fontSize: '11.5px',
-                        fontWeight: provider === '9router' ? 700 : 500,
+                        fontWeight: provider === '9router' ? 600 : 500,
                         borderRadius: '6px',
-                        border: `1px solid ${provider === '9router' ? '#06b6d4' : 'rgba(255,255,255,0.08)'}`,
-                        background: provider === '9router' ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                        color: provider === '9router' ? '#67e8f9' : '#94a3b8',
+                        border: `1px solid ${provider === '9router' ? '#3b82f6' : '#282d3c'}`,
+                        background: provider === '9router' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                        color: provider === '9router' ? '#93c5fd' : '#94a3b8',
                         cursor: 'pointer',
                       }}
                     >
-                      ⚡ 9Router
+                      9Router
                     </button>
                     <button
                       type="button"
@@ -669,15 +770,15 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                         flex: 1,
                         padding: '5px 8px',
                         fontSize: '11.5px',
-                        fontWeight: provider === 'gemini' ? 700 : 500,
+                        fontWeight: provider === 'gemini' ? 600 : 500,
                         borderRadius: '6px',
-                        border: `1px solid ${provider === 'gemini' ? '#8b5cf6' : 'rgba(255,255,255,0.08)'}`,
-                        background: provider === 'gemini' ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
-                        color: provider === 'gemini' ? '#c4b5fd' : '#94a3b8',
+                        border: `1px solid ${provider === 'gemini' ? '#3b82f6' : '#282d3c'}`,
+                        background: provider === 'gemini' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                        color: provider === 'gemini' ? '#93c5fd' : '#94a3b8',
                         cursor: 'pointer',
                       }}
                     >
-                      ✨ Gemini
+                      Gemini
                     </button>
                   </div>
 
@@ -710,8 +811,8 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                               justifyContent: 'space-between',
                               padding: '8px 10px',
                               borderRadius: '6px',
-                              border: isSelected ? '1px solid #06b6d4' : '1px solid transparent',
-                              background: isSelected ? 'rgba(6, 182, 212, 0.16)' : 'transparent',
+                              border: isSelected ? '1px solid #3b82f6' : '1px solid transparent',
+                              background: isSelected ? 'rgba(59, 130, 246, 0.12)' : 'transparent',
                               color: isSelected ? '#ffffff' : '#cbd5e1',
                               cursor: 'pointer',
                               textAlign: 'left',
@@ -725,14 +826,13 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                             }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span style={{ fontSize: '14px', color: '#22d3ee' }}>⚡</span>
-                              <span style={{ fontSize: '13px', fontWeight: isSelected ? 700 : 500 }}>{item.id}</span>
+                              <span style={{ fontSize: '13px', fontWeight: isSelected ? 600 : 400 }}>{item.id}</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span
                                 style={{
-                                  fontSize: '10.5px',
-                                  color: '#64748b',
+                                  fontSize: '10px',
+                                  color: '#8490a5',
                                   background: 'rgba(255,255,255,0.05)',
                                   padding: '1px 6px',
                                   borderRadius: '4px',
@@ -740,7 +840,7 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                               >
                                 Combo
                               </span>
-                              {isSelected && <Check size={14} style={{ color: '#22d3ee' }} />}
+                              {isSelected && <Check size={14} style={{ color: '#60a5fa' }} />}
                             </div>
                           </button>
                         );
@@ -922,11 +1022,11 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                     gap: '6px',
                     padding: '8px 12px',
                     fontSize: '12px',
-                    fontWeight: 600,
+                    fontWeight: 500,
                     borderRadius: '6px',
-                    border: `1px solid ${provider === 'gemini' ? '#8b5cf6' : 'rgba(255,255,255,0.1)'}`,
-                    background: provider === 'gemini' ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
-                    color: provider === 'gemini' ? '#c4b5fd' : '#94a3b8',
+                    border: `1px solid ${provider === 'gemini' ? '#3b82f6' : '#282d3c'}`,
+                    background: provider === 'gemini' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                    color: provider === 'gemini' ? '#93c5fd' : '#94a3b8',
                     cursor: 'pointer',
                   }}
                 >
@@ -944,11 +1044,11 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                     gap: '6px',
                     padding: '8px 12px',
                     fontSize: '12px',
-                    fontWeight: 600,
+                    fontWeight: 500,
                     borderRadius: '6px',
-                    border: `1px solid ${provider === '9router' ? '#06b6d4' : 'rgba(255,255,255,0.1)'}`,
-                    background: provider === '9router' ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                    color: provider === '9router' ? '#67e8f9' : '#94a3b8',
+                    border: `1px solid ${provider === '9router' ? '#3b82f6' : '#282d3c'}`,
+                    background: provider === '9router' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                    color: provider === '9router' ? '#93c5fd' : '#94a3b8',
                     cursor: 'pointer',
                   }}
                 >
@@ -961,7 +1061,7 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                 <>
                   <div className="ai-modal-key-card-header">
                     <h4 className="ai-modal-key-card-title">
-                      <Key size={15} style={{ color: '#a78bfa' }} />
+                      <Key size={15} style={{ color: '#94a3b8' }} />
                       <span>Input Ulang Google Gemini API Key & Model</span>
                     </h4>
                     <a
@@ -972,10 +1072,10 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
-                        color: '#38bdf8',
+                        color: '#3b82f6',
                         fontSize: '11.5px',
                         textDecoration: 'none',
-                        fontWeight: 600,
+                        fontWeight: 500,
                       }}
                     >
                       <span>Ambil API Key Gratis di Google</span>
@@ -1188,29 +1288,72 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
             </div>
           )}
 
-          {/* Loading State */}
+          {/* Loading State with Progress Bar & Percentage */}
           {loading ? (
             <div className="ai-modal-loading">
-              <div
-                className="ai-modal-spinner"
-                style={{
-                  borderTopColor: provider === '9router' ? '#06b6d4' : '#8b5cf6',
-                  borderRightColor: provider === '9router' ? '#38bdf8' : '#38bdf8',
-                }}
-              />
-              <div className="ai-modal-loading-text">
-                {detectingCombos
-                  ? 'Mendeteksi profil combo di 9Router...'
-                  : provider === '9router'
-                  ? `9Router (${selected9RouterModel || 'Gateway'}) sedang menganalisis data trading Anda...`
-                  : `Gemini (${currentModel}) sedang menganalisis data trading Anda...`}
+              <div className="ai-modal-loading-icon-wrap">
+                <Sparkles size={20} className="ai-modal-loading-icon" />
               </div>
+
+              <div className="ai-modal-loading-title">
+                {detectingCombos
+                  ? 'Mendeteksi Gateway 9Router...'
+                  : mode === 'trade'
+                  ? 'Menganalisis Eksekusi Trade...'
+                  : 'Mengaudit Sesi Trading...'}
+              </div>
+
+              {/* Garis Persenan & Status Card */}
+              <div className="ai-modal-progress-card">
+                <div className="ai-modal-progress-meta">
+                  <span className="ai-modal-progress-step">
+                    {detectingCombos
+                      ? (loadingProgress < 50 ? 'Menghubungi endpoint localhost:20128...' : 'Membaca profil combo aktif...')
+                      : loadingProgress >= 100
+                      ? 'Analisis selesai! Menampilkan hasil...'
+                      : loadingProgress < 25
+                      ? 'Membaca log order & parameter trading...'
+                      : loadingProgress < 55
+                      ? (mode === 'trade' ? 'Mengevaluasi Risk:Reward & timing eksekusi...' : 'Menganalisis winrate & drawdown sesi...')
+                      : loadingProgress < 85
+                      ? 'Memindai pola statistik & bias psikologi...'
+                      : 'Menyusun evaluasi komprehensif AI Coach...'}
+                  </span>
+                  <span className="ai-modal-progress-pct">
+                    {Math.min(100, Math.round(loadingProgress))}%
+                  </span>
+                </div>
+
+                {/* Garis Persenan Track & Animated Fill */}
+                <div className="ai-modal-progress-track">
+                  <div
+                    className="ai-modal-progress-fill"
+                    style={{
+                      width: `${Math.min(100, Math.max(0, loadingProgress))}%`,
+                      background:
+                        provider === '9router'
+                          ? 'linear-gradient(90deg, #0284c7, #06b6d4, #38bdf8)'
+                          : 'linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa)',
+                    }}
+                  />
+                </div>
+              </div>
+
               <div className="ai-modal-loading-sub">
                 {detectingCombos
                   ? 'Memeriksa endpoint 9Router di http://localhost:20128 untuk mendeteksi profil combo aktif.'
                   : mode === 'trade'
                   ? 'Mengevaluasi kalkulasi harga entry, timing eksekusi, Risk-to-Reward, dan visual chart screenshot.'
                   : 'Memindai pola statistik, drawdown, habit trading, dan kemungkinan bias psikologi.'}
+              </div>
+
+              <div className="ai-modal-loading-engine-pill">
+                <span className="ai-modal-engine-dot" />
+                <span>
+                  {provider === '9router'
+                    ? `9Router Gateway (${selected9RouterModel || 'combo'})`
+                    : `Google Gemini (${currentModel})`}
+                </span>
               </div>
             </div>
           ) : awaitingComboSelection && !error ? (
@@ -1227,32 +1370,31 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
             >
               <div
                 style={{
-                  width: '52px',
-                  height: '52px',
-                  borderRadius: '14px',
-                  background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(2, 132, 199, 0.2) 100%)',
-                  border: '1px solid rgba(6, 182, 212, 0.4)',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '10px',
+                  background: '#1e222e',
+                  border: '1px solid #2a3040',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#22d3ee',
+                  color: '#94a3b8',
                   marginBottom: '16px',
-                  boxShadow: '0 0 20px rgba(6, 182, 212, 0.25)',
                 }}
               >
-                <Server size={26} />
+                <Server size={22} />
               </div>
 
-              <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#f8fafc', margin: '0 0 8px 0' }}>
+              <h3 style={{ fontSize: '15.5px', fontWeight: 600, color: '#f8fafc', margin: '0 0 8px 0' }}>
                 Pilih Profil Combo 9Router
               </h3>
 
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 24px 0', maxWidth: '440px', lineHeight: 1.5 }}>
-                Terdeteksi <strong style={{ color: '#22d3ee' }}>{detectedCombos.filter((c) => c.isCombo).length} profil combo aktif</strong> di 9Router Anda.
+              <p style={{ fontSize: '12.5px', color: '#8490a5', margin: '0 0 24px 0', maxWidth: '440px', lineHeight: 1.5 }}>
+                Terdeteksi <strong style={{ color: '#e2e8f0' }}>{detectedCombos.filter((c) => c.isCombo).length} profil combo aktif</strong> di 9Router Anda.
                 Pilih salah satu combo untuk memulai analisis {mode === 'trade' ? 'trade ini' : 'sesi ini'}:
               </p>
 
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {detectedCombos.filter((c) => c.isCombo).map((combo) => {
                   const isCurrent = selected9RouterModel === combo.id;
                   return (
@@ -1261,46 +1403,38 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
                       type="button"
                       onClick={() => handleSelectAndConnect(combo.id)}
                       style={{
-                        padding: '14px 28px',
-                        fontSize: '14.5px',
-                        fontWeight: 700,
-                        borderRadius: '10px',
+                        padding: '12px 22px',
+                        fontSize: '13.5px',
+                        fontWeight: 600,
+                        borderRadius: '8px',
                         cursor: 'pointer',
-                        border: `1.5px solid ${isCurrent ? '#06b6d4' : 'rgba(255,255,255,0.12)'}`,
-                        background: isCurrent
-                          ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.3) 0%, rgba(2, 132, 199, 0.3) 100%)'
-                          : 'rgba(255,255,255,0.04)',
-                        color: isCurrent ? '#67e8f9' : '#e2e8f0',
+                        border: `1px solid ${isCurrent ? '#3b82f6' : '#282d3c'}`,
+                        background: isCurrent ? 'rgba(59, 130, 246, 0.15)' : '#181b24',
+                        color: isCurrent ? '#ffffff' : '#cbd5e1',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '8px',
-                        transition: 'all 0.18s ease',
-                        boxShadow: isCurrent ? '0 4px 16px rgba(6, 182, 212, 0.25)' : 'none',
+                        transition: 'all 0.15s ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = '#06b6d4';
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.35) 0%, rgba(2, 132, 199, 0.35) 100%)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.borderColor = isCurrent ? '#3b82f6' : '#3d4458';
+                        e.currentTarget.style.background = isCurrent ? 'rgba(59, 130, 246, 0.2)' : '#1f2330';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = isCurrent ? '#06b6d4' : 'rgba(255,255,255,0.12)';
-                        e.currentTarget.style.background = isCurrent
-                          ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.3) 0%, rgba(2, 132, 199, 0.3) 100%)'
-                          : 'rgba(255,255,255,0.04)';
-                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.borderColor = isCurrent ? '#3b82f6' : '#282d3c';
+                        e.currentTarget.style.background = isCurrent ? 'rgba(59, 130, 246, 0.15)' : '#181b24';
                       }}
                     >
-                      <span style={{ fontSize: '16px' }}>⚡</span>
                       <span>{combo.id}</span>
                       {isCurrent && (
                         <span
                           style={{
-                            fontSize: '10px',
-                            background: '#06b6d4',
-                            color: '#000',
+                            fontSize: '9.5px',
+                            background: '#2563eb',
+                            color: '#ffffff',
                             borderRadius: '4px',
                             padding: '1px 6px',
-                            fontWeight: 800,
+                            fontWeight: 600,
                             marginLeft: '4px',
                           }}
                         >
@@ -1382,17 +1516,30 @@ export const AICoachModal: React.FC<AICoachModalProps> = ({
 
         {/* Interactive Chat Bar */}
         {(result || chatMessages.length > 0) && !showKeyCard && !loading && (
-          <form className="ai-modal-chat-bar" onSubmit={handleSendChat}>
+          <form
+            className="ai-modal-chat-bar"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendChat(e);
+            }}
+          >
             <input
               type="text"
               className="ai-modal-chat-input"
               placeholder="Tanyakan analisis lanjutan seputar trade / sesi ini..."
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendChat();
+                }
+              }}
               disabled={sendingChat || loading}
             />
             <button
-              type="submit"
+              type="button"
+              onClick={() => handleSendChat()}
               className="ai-modal-chat-send-btn"
               disabled={!chatInput.trim() || sendingChat || loading}
               title="Kirim pesan ke AI Coach"

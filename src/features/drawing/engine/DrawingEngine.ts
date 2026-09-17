@@ -14,7 +14,7 @@ import { DrawingRenderer, type RenderContext } from './DrawingRenderer';
 import { FloatingToolbarManager } from './FloatingToolbarManager';
 import { ContextMenuManager } from './ContextMenuManager';
 import { trace, isActive } from '../trace';
-import { getXFromLogical, priceFromY } from '../utils/coordinateEngine';
+import { timeToCoordinateSafe, coordinateToTimeSafe, priceFromY } from '../utils/coordinateEngine';
 
 export interface DrawingEngineConfig {
   renderContext?: RenderContext;
@@ -114,38 +114,6 @@ export class DrawingEngine {
         const rect = chartEl.getBoundingClientRect();
         const timeScale = chart.timeScale();
 
-        // Pre-compute dataset metadata ONCE per updateContext call (0 per-point allocations)
-        let lastTime = 0;
-        let lastBarIndex = 0;
-        let barInterval = 3600;
-        let lastBarX: number | null = null;
-        let barSpacing = 6;
-        let hasData = false;
-
-        if (this.candles && this.candles.length > 0) {
-          hasData = true;
-          const len = this.candles.length;
-          const lastCandle = this.candles[len - 1];
-          lastTime = lastCandle.time;
-          lastBarIndex = len - 1;
-          if (len > 1) {
-            const prevCandle = this.candles[len - 2];
-            if (lastTime - prevCandle.time > 0) {
-              barInterval = lastTime - prevCandle.time;
-            }
-          }
-          try {
-            lastBarX = timeScale.timeToCoordinate(lastCandle.time as any) ?? timeScale.logicalToCoordinate(lastBarIndex as any);
-            if (len > 1 && lastBarX !== null) {
-              const prevCandle = this.candles[len - 2];
-              const prevBarX = timeScale.timeToCoordinate(prevCandle.time as any);
-              if (prevBarX !== null && (lastBarX as number) > prevBarX) {
-                barSpacing = (lastBarX as number) - prevBarX;
-              }
-            }
-          } catch {}
-        }
-
         let pScaleWidth = 60;
         try {
           const w = (chart.priceScale('right') as any)?.width?.();
@@ -155,46 +123,7 @@ export class DrawingEngine {
         } catch {}
 
         this.setRenderContext({
-          timeToX: (t) => {
-            if (!Number.isFinite(t)) return 0;
-            try {
-              const coordinate = timeScale.timeToCoordinate(t as Time);
-              if (coordinate !== null && coordinate !== undefined && Number.isFinite(coordinate)) return coordinate as number;
-            } catch {}
-
-            const candles = this.candles;
-            const len = candles ? candles.length : 0;
-            if (len > 0) {
-              const lastCandle = candles[len - 1];
-              const lastTimeVal = typeof lastCandle.time === 'number' ? lastCandle.time : (new Date(lastCandle.time as any).getTime() / 1000);
-              const firstCandle = candles[0];
-              const firstTimeVal = typeof firstCandle.time === 'number' ? firstCandle.time : (new Date(firstCandle.time as any).getTime() / 1000);
-              const lastBarIndexVal = len - 1;
-              const barIntervalVal = len > 1
-                ? Math.max((lastTimeVal - firstTimeVal) / (len - 1), 1)
-                : 3600;
-
-              const targetLogical = lastBarIndexVal + (t - lastTimeVal) / barIntervalVal;
-              const x = getXFromLogical(chart, targetLogical, len);
-              if (x !== null && x !== undefined && Number.isFinite(x)) return x;
-            }
-
-            // Fallback via visible range
-            try {
-              const visibleRange = timeScale.getVisibleLogicalRange();
-              if (visibleRange) {
-                const leftX = timeScale.logicalToCoordinate(visibleRange.from as any);
-                const rightX = timeScale.logicalToCoordinate(visibleRange.to as any);
-                if (leftX !== null && rightX !== null && rightX !== leftX) {
-                  const currentBarSpacing = (rightX - leftX) / (visibleRange.to - visibleRange.from);
-                  const targetLogical = visibleRange.to + (t - (Date.now() / 1000)) / 3600;
-                  return rightX + (targetLogical - visibleRange.to) * currentBarSpacing;
-                }
-              }
-            } catch {}
-
-            return 0;
-          },
+          timeToX: (t) => timeToCoordinateSafe(chart, t, this.candles),
           priceToY: (p) => {
             if (!Number.isFinite(p)) return 0;
             try {
@@ -203,55 +132,7 @@ export class DrawingEngine {
             } catch {}
             return priceFromY(chart, this.series, p);
           },
-          xToTime: (x) => {
-            if (!hasData) return NaN;
-
-            try {
-              // Recompute lastBarX FRESH each call — closure value is stale when timescale is panned
-              const currentLastBarX =
-                timeScale.timeToCoordinate(lastTime as any) ??
-                timeScale.logicalToCoordinate(lastBarIndex as any);
-              const barSp = (timeScale as any).options?.()?.barSpacing ?? barSpacing;
-
-              // Path 1: mouse is to the right of last bar → extrapolate
-              if (currentLastBarX !== null && x > (currentLastBarX as number)) {
-                const delta = (x - (currentLastBarX as number)) / barSp;
-                return Math.round(lastTime + delta * barInterval);
-              }
-
-              // Path 2: normal area — try time API
-              const t = timeScale.coordinateToTime(x as any);
-              if (t !== null && t !== undefined && typeof t === 'number' && Number.isFinite(t) && t > 0) return t;
-
-              // Path 3: try logical index
-              try {
-                const logical = timeScale.coordinateToLogical(x as any) as number | null;
-                if (logical !== null && logical !== undefined && Number.isFinite(logical)) {
-                  return Math.round(lastTime + (logical - lastBarIndex) * barInterval);
-                }
-              } catch {}
-
-              // Path 4: visible range projection (handles empty future area when all else fails)
-              const visibleRange = timeScale.getVisibleLogicalRange();
-              if (visibleRange) {
-                const leftX = timeScale.logicalToCoordinate(visibleRange.from as any) as number | null;
-                const rightX = timeScale.logicalToCoordinate(visibleRange.to as any) as number | null;
-                if (leftX !== null && rightX !== null && rightX !== leftX) {
-                  const bsFromRange = (rightX - leftX) / (visibleRange.to - visibleRange.from);
-                  const projLogical = visibleRange.to + (x - rightX) / bsFromRange;
-                  return Math.round(lastTime + (projLogical - lastBarIndex) * barInterval);
-                }
-              }
-
-              // Path 5: last resort with refreshed lastBarX
-              if (currentLastBarX !== null) {
-                const delta = (x - (currentLastBarX as number)) / barSp;
-                return Math.round(lastTime + delta * barInterval);
-              }
-            } catch {}
-
-            return NaN;
-          },
+          xToTime: (x) => coordinateToTimeSafe(chart, x, this.candles),
           yToPrice: (y) => {
             if (!this.series) return NaN;
             try {

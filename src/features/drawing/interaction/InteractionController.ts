@@ -68,24 +68,34 @@ export interface InteractionCallbacks {
   onOpenSettingsModal?: (drawing: DrawingObject) => void;
 }
 
-function snapToShiftAngles(p1x: number, p1y: number, targetX: number, targetY: number): { x: number; y: number } {
+export function snapToShiftAngles(
+  p1x: number,
+  p1y: number,
+  targetX: number,
+  targetY: number
+): { x: number; y: number; isHorizontal: boolean; isVertical: boolean } {
   const dx = targetX - p1x;
   const dy = targetY - p1y;
   const dist = Math.hypot(dx, dy);
-  if (dist <= 2) return { x: targetX, y: targetY };
+  if (dist <= 2) return { x: targetX, y: targetY, isHorizontal: false, isVertical: false };
 
   const angle = Math.atan2(dy, dx);
   const snapAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
 
-  if (Math.abs(Math.sin(snapAngle)) < 1e-6) {
-    return { x: targetX, y: p1y };
+  const isHorizontal = Math.abs(Math.sin(snapAngle)) < 1e-5;
+  const isVertical = Math.abs(Math.cos(snapAngle)) < 1e-5;
+
+  if (isHorizontal) {
+    return { x: targetX, y: p1y, isHorizontal: true, isVertical: false };
   }
-  if (Math.abs(Math.cos(snapAngle)) < 1e-6) {
-    return { x: p1x, y: targetY };
+  if (isVertical) {
+    return { x: p1x, y: targetY, isHorizontal: false, isVertical: true };
   }
   return {
     x: p1x + dist * Math.cos(snapAngle),
     y: p1y + dist * Math.sin(snapAngle),
+    isHorizontal: false,
+    isVertical: false,
   };
 }
 
@@ -102,6 +112,16 @@ export class InteractionController {
   private lastHoverHit: string | null = null;
   private dragFrameId: number | null = null;
   private pendingMouseMove: { x: number; y: number } | null = null;
+  private lastClientPos: { clientX: number; clientY: number } | null = null;
+  private isShiftHeld: boolean = false;
+
+  handleShiftState(isHeld: boolean): void {
+    if (this.isShiftHeld === isHeld) return;
+    this.isShiftHeld = isHeld;
+    if (this.lastClientPos) {
+      this.handlePointerMove(this.lastClientPos.clientX, this.lastClientPos.clientY, isHeld);
+    }
+  }
 
   constructor(callbacks: InteractionCallbacks) {
     this.callbacks = callbacks;
@@ -151,21 +171,30 @@ export class InteractionController {
   handlePointerDown(clientX: number, clientY: number, ctrlKey: boolean, shiftKey: boolean = false): void {
     const chartPoint = this.bridge.screenToChart(clientX, clientY);
     if (!chartPoint) return;
+    this.lastClientPos = { clientX, clientY };
 
     const state = this.sm.getState();
     const tool = this.callbacks.getActiveTool();
     const cs = this.bridge.getCoordinateSystem();
+    const effectiveShift = shiftKey || this.isShiftHeld;
+
+    let isShiftHorizontal = false;
+    let isShiftVertical = false;
 
     // ── Shift Key Auto-Straight / Orthogonal Snap on Click ──
-    if (shiftKey && state === 'creating-drawing') {
+    if (effectiveShift && state === 'creating-drawing') {
       const currentPoints = this.callbacks.getTempPoints();
       if (currentPoints.length >= 1) {
         const p1 = currentPoints[0];
         const p1x = cs.timeToX(p1.time);
         const p1y = cs.priceToY(p1.price);
-        const snapped = snapToShiftAngles(p1x, p1y, chartPoint.x, chartPoint.y);
-        chartPoint.x = snapped.x;
-        chartPoint.y = snapped.y;
+        if (Number.isFinite(p1x) && Number.isFinite(p1y)) {
+          const snapped = snapToShiftAngles(p1x, p1y, chartPoint.x, chartPoint.y);
+          chartPoint.x = snapped.x;
+          chartPoint.y = snapped.y;
+          isShiftHorizontal = snapped.isHorizontal;
+          isShiftVertical = snapped.isVertical;
+        }
       }
     }
 
@@ -234,6 +263,20 @@ export class InteractionController {
       const snapMgr = this.callbacks.getSnapManager?.();
       const newPoints = toolInstance.onPointerDown(
         { getSnapPoint: (x: number, y: number) => {
+          if (isShiftHorizontal && currentPoints[0]) {
+            const rawTime = cs.xToTime(x);
+            return {
+              time: (Number.isFinite(rawTime) && rawTime > 0) ? rawTime : this.bridge.lastValidTime,
+              price: currentPoints[0].price,
+            };
+          }
+          if (isShiftVertical && currentPoints[0]) {
+            const rawPrice = cs.yToPrice(y);
+            return {
+              time: currentPoints[0].time,
+              price: Number.isFinite(rawPrice) ? rawPrice : currentPoints[0].price,
+            };
+          }
           const t = cs.xToTime(x);
           const p = cs.yToPrice(y);
           const rawTime = (Number.isFinite(t) && t > 0) ? t : this.bridge.lastValidTime;
@@ -353,27 +396,36 @@ export class InteractionController {
   handlePointerMove(clientX: number, clientY: number, shiftKey: boolean = false): void {
     const chartPoint = this.bridge.screenToChart(clientX, clientY);
     if (!chartPoint) return;
+    this.lastClientPos = { clientX, clientY };
 
     const state = this.sm.getState();
     const tool = this.callbacks.getActiveTool();
     const cs = this.bridge.getCoordinateSystem();
+    const effectiveShift = shiftKey || this.isShiftHeld;
+
+    let isShiftHorizontal = false;
+    let isShiftVertical = false;
 
     // ── Shift Key Auto-Straight / Orthogonal Snap ──
-    if (shiftKey && state === 'creating-drawing') {
+    if (effectiveShift && state === 'creating-drawing') {
       const currentPoints = this.callbacks.getTempPoints();
       if (currentPoints.length >= 1) {
         const p1 = currentPoints[0];
         const p1x = cs.timeToX(p1.time);
         const p1y = cs.priceToY(p1.price);
-        const snapped = snapToShiftAngles(p1x, p1y, chartPoint.x, chartPoint.y);
-        chartPoint.x = snapped.x;
-        chartPoint.y = snapped.y;
+        if (Number.isFinite(p1x) && Number.isFinite(p1y)) {
+          const snapped = snapToShiftAngles(p1x, p1y, chartPoint.x, chartPoint.y);
+          chartPoint.x = snapped.x;
+          chartPoint.y = snapped.y;
+          isShiftHorizontal = snapped.isHorizontal;
+          isShiftVertical = snapped.isVertical;
+        }
       }
     }
 
     // ── Drag in progress (Immediate Screen-Space Update for Real-Time Live Preview) ──
     if (this.drag.isActive) {
-      this.drag.update(chartPoint.x, chartPoint.y, shiftKey, cs);
+      this.drag.update(chartPoint.x, chartPoint.y, effectiveShift, cs);
       const activeId = this.drag.getDraggingId();
       const screenPoints = this.drag.getCurrentScreenPoints();
       if (activeId && screenPoints) {
@@ -428,6 +480,20 @@ export class InteractionController {
       const snapMgr = this.callbacks.getSnapManager?.();
       const newPoints = toolInstance.onPointerMove(
         { getSnapPoint: (x: number, y: number) => {
+          if (isShiftHorizontal && currentPoints[0]) {
+            const rawTime = cs.xToTime(x);
+            return {
+              time: (Number.isFinite(rawTime) && rawTime > 0) ? rawTime : this.bridge.lastValidTime,
+              price: currentPoints[0].price,
+            };
+          }
+          if (isShiftVertical && currentPoints[0]) {
+            const rawPrice = cs.yToPrice(y);
+            return {
+              time: currentPoints[0].time,
+              price: Number.isFinite(rawPrice) ? rawPrice : currentPoints[0].price,
+            };
+          }
           const t = cs.xToTime(x);
           const p = cs.yToPrice(y);
           const rawTime = (Number.isFinite(t) && t > 0) ? t : this.bridge.lastValidTime;

@@ -14,6 +14,7 @@ export interface DragContext {
   startMouseY: number;
   origScreenPoints: Array<{ x: number; y: number }>;
   currentScreenPoints: Array<{ x: number; y: number }>;
+  shiftSnap?: { isHorizontal: boolean; isVertical: boolean; otherIdx: number };
 }
 
 export interface DragCallbacks {
@@ -254,6 +255,8 @@ export class DragController {
 
       let targetX = mouseX;
       let targetY = mouseY;
+      let isHorizontal = false;
+      let isVertical = false;
 
       if (shiftKey && fixedP) {
         const dx = mouseX - fixedP.x;
@@ -262,10 +265,12 @@ export class DragController {
         if (dist > 2) {
           const angle = Math.atan2(dy, dx);
           const snapAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
-          if (Math.abs(Math.sin(snapAngle)) < 1e-6) {
+          if (Math.abs(Math.sin(snapAngle)) < 1e-5) {
             targetY = fixedP.y;
-          } else if (Math.abs(Math.cos(snapAngle)) < 1e-6) {
+            isHorizontal = true;
+          } else if (Math.abs(Math.cos(snapAngle)) < 1e-5) {
             targetX = fixedP.x;
+            isVertical = true;
           } else {
             targetX = fixedP.x + dist * Math.cos(snapAngle);
             targetY = fixedP.y + dist * Math.sin(snapAngle);
@@ -273,8 +278,11 @@ export class DragController {
         }
       }
 
+      this.context.shiftSnap = (isHorizontal || isVertical) ? { isHorizontal, isVertical, otherIdx } : undefined;
+
       const snapMgr = this.callbacks.getSnapManager?.();
-      if (cs && snapMgr?.isEnabled()) {
+      // Only snap to candles if not locked to orthogonal shift angle
+      if (!isHorizontal && !isVertical && cs && snapMgr?.isEnabled()) {
         const rawT = cs.xToTime(targetX);
         const rawP = cs.yToPrice(targetY);
         const snapRes = snapMgr.snap(rawT, rawP, cs.xToTime, cs.yToPrice, cs.timeToX, cs.priceToY);
@@ -309,6 +317,9 @@ export class DragController {
     const drawingId = this.context.drawingId;
     const origDrawing = this.callbacks.getDrawing(drawingId);
     const snapMgr = this.callbacks.getSnapManager?.();
+    const shiftSnap = this.context.shiftSnap;
+    const anchorIdx = this.context.anchorIndex;
+
     const points = this.context.currentScreenPoints.map((sp, i) => {
       const time = cs.xToTime(sp.x);
       const price = cs.yToPrice(sp.y);
@@ -316,8 +327,16 @@ export class DragController {
       let validTime = Number.isFinite(time) && !isNaN(time) && time > 0 ? time : (origP?.time ?? 0);
       let validPrice = Number.isFinite(price) && !isNaN(price) && price !== 0 ? price : (origP?.price ?? 0);
 
-      // Snap anchor if snapManager is enabled and this anchor was resized
-      if (this.context?.anchorIndex === i && snapMgr?.isEnabled()) {
+      // Lock exact orthogonal values when shift-snapped during line resize
+      if (shiftSnap && anchorIdx === i) {
+        const otherP = origDrawing?.points[shiftSnap.otherIdx];
+        if (shiftSnap.isHorizontal && otherP) {
+          validPrice = otherP.price; // 100% exact horizontal price
+        } else if (shiftSnap.isVertical && otherP) {
+          validTime = otherP.time; // 100% exact vertical timestamp
+        }
+      } else if (anchorIdx === i && snapMgr?.isEnabled()) {
+        // Snap anchor if snapManager is enabled and this anchor was resized without shift
         const snapRes = snapMgr.snap(validTime, validPrice, cs.xToTime, cs.yToPrice, cs.timeToX, cs.priceToY);
         if (snapRes.snapped) {
           validTime = snapRes.time;

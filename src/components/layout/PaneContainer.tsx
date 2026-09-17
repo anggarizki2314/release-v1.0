@@ -242,20 +242,20 @@ function PaneContainerInner({
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; clickedPrice?: number | null; clickedDrawingId?: string | null } | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const { workspace, setActivePaneId, updatePaneTimeframe } = useWorkspace();
-  const hasAutoSwitchedToM5Ref = useRef(false);
+  const hasAutoSwitchedToM15Ref = useRef(false);
 
-  // Reset auto-switch flag when session changes
+  // Reset auto-switch flag whenever session changes
   useEffect(() => {
-    hasAutoSwitchedToM5Ref.current = false;
+    hasAutoSwitchedToM15Ref.current = false;
   }, [activeSession?.id]);
 
-  // Auto-switch from M3 to M5 once initial candle load is completely finished
+  // Auto-switch from initial staging timeframe (M1) to M15 once candles are loaded
   useEffect(() => {
-    if (timeframe === 'M3' && allCandles.length > 0 && sessionReady && !hasAutoSwitchedToM5Ref.current) {
-      hasAutoSwitchedToM5Ref.current = true;
-      console.log('[PaneContainer] Initial candle load completed on M3, auto-switching to M5...');
+    if (timeframe === 'M1' && allCandles.length > 0 && sessionReady && !hasAutoSwitchedToM15Ref.current) {
+      hasAutoSwitchedToM15Ref.current = true;
+      console.log('[PaneContainer] Initial candle load completed on M1, auto-switching to M15...');
       const timer = setTimeout(() => {
-        updatePaneTimeframe(paneId, 'M5');
+        updatePaneTimeframe(paneId, 'M15');
       }, 100);
       return () => clearTimeout(timer);
     }
@@ -781,7 +781,7 @@ function PaneContainerInner({
         magnetEnabled={magnetEnabled}
         onToolDeactivate={() => onActiveToolChange('pointer')}
         timezone={timezone}
-        candles={allCandles}
+        candles={displayCandles}
         onEngineReady={(engine) => { drawingEngineRef.current = engine; }}
         onSelectPositionDrawing={handleSelectPositionDrawing}
         sessionId={activeSession?.id ?? null}

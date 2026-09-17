@@ -23,6 +23,8 @@ export interface TradingStoreEventPayloads {
   OrderUpdated: { order: OrderState };
   OrderRemoved: { orderId: string };
   HistoryAdded: { trade: HistoryState };
+  HistoryRemoved: { tradeId: string; trade?: HistoryState };
+  HistoryCleared: { count: number };
   AccountUpdated: { account: AccountState };
   SettingsUpdated: { settings: TradingSettingsState };
   RuntimeUpdated: { runtime: RuntimeState };

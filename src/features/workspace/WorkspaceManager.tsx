@@ -188,7 +188,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     } else {
       // 2. RESUME EXISTING SESSION: restore persisted layout state for this sessionId if available
       const existing = loadSessionWorkspace(sessionId);
-      const targetTf = 'M3';
+      const targetTf = 'M1';
       if (existing) {
         const updatedPanes = existing.panes.map((p) => ({
           ...p,
@@ -196,12 +196,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         }));
         const updated = { ...existing, panes: updatedPanes };
         setWorkspace(updated);
-        console.log('[WorkspaceManager] Restored existing workspace for session with timeframe M3:', sessionId);
+        console.log('[WorkspaceManager] Restored existing workspace for session with staging timeframe M1:', sessionId);
       } else {
         const fresh = createDefaultWorkspace(defaultSymbolId, targetTf);
         saveSessionWorkspace(fresh, sessionId);
         setWorkspace(fresh);
-        console.log('[WorkspaceManager] Initialized default workspace for session without saved layout:', sessionId);
+        console.log('[WorkspaceManager] Initialized default workspace for session with staging timeframe M1:', sessionId);
       }
     }
   }, []);

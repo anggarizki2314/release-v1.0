@@ -21,6 +21,7 @@ import { useCandles, clearSymbolTimeframeCache } from '@features/chart';
 import ReplaySetupModal from '@components/replay/ReplaySetupModal';
 import { IndicatorModal } from '@features/indicators';
 import type { AnalyticsSession } from '@features/analytics/types';
+import { MiniAiCopilotBar } from '@features/ai/components/MiniAiCopilotBar';
 import './AppShell.css';
 
 type AppScreen = 'HOME' | 'SESSION_WIZARD' | 'CHALLENGE_CONFIG' | 'CHART';
@@ -59,6 +60,26 @@ function AppShellInner() {
     };
   }, []);
 
+  // AI Live Copilot Bar Visibility
+  const [isCopilotVisible, setIsCopilotVisible] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('tradepro_copilot_visible') !== 'false';
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const handleToggle = () => {
+      setIsCopilotVisible((prev) => {
+        const next = !prev;
+        localStorage.setItem('tradepro_copilot_visible', String(next));
+        return next;
+      });
+    };
+    window.addEventListener('toggle-copilot-visibility', handleToggle);
+    return () => window.removeEventListener('toggle-copilot-visibility', handleToggle);
+  }, []);
+
   // Auto-refresh symbols from SQLite whenever user enters CHART screen
   useEffect(() => {
     if (screen === 'CHART') {
@@ -86,13 +107,11 @@ function AppShellInner() {
   const [isPreparingChart, setIsPreparingChart] = useState(false);
   const [chartLoadingText, setChartLoadingText] = useState('Loading Market Data...');
 
-  const [isAppInitializing, setIsAppInitializing] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
 
   const { initSessions, createNewSession, activeSession, setActiveSessionId, updateSessionReplayPointer } = useSessionStore();
 
   const runStartupInit = useCallback(async () => {
-    setIsAppInitializing(true);
     setInitError(null);
     try {
       await Promise.allSettled([
@@ -102,19 +121,27 @@ function AppShellInner() {
     } catch (err: any) {
       console.error('[AppStartup] Initialization error:', err);
       setInitError(err?.message || 'Failed to initialize core metadata');
-    } finally {
-      setIsAppInitializing(false);
-      // Wait for React to finish rendering and paint the dashboard DOM
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          window.forexReplay?.notifyAppReady?.();
-        }, 400);
-      });
     }
   }, [refreshSymbols, initSessions]);
 
   useEffect(() => {
-    runStartupInit();
+    let isMounted = true;
+    const init = async () => {
+      await runStartupInit();
+      if (!isMounted) return;
+      // Allow dashboard to fully mount and paint without main-thread jank
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          if (isMounted) {
+            window.forexReplay?.notifyAppReady?.();
+          }
+        }, 120);
+      });
+    };
+    init();
+    return () => {
+      isMounted = false;
+    };
   }, [runStartupInit]);
 
   const handleNonBlockingLaunch = (text: string, action: () => Promise<unknown> | unknown) => {
@@ -242,22 +269,6 @@ function AppShellInner() {
     </div>
   );
 
-  // GLOBAL STARTUP INITIALIZATION GATE
-  if (isAppInitializing) {
-    return (
-      <div className="global-startup-screen">
-        <div className="global-startup-card">
-          <div className="global-startup-brand">
-            <span className="global-startup-title">TradePro</span>
-          </div>
-          <div className="global-startup-status">
-            <div className="global-startup-spinner" />
-            <span className="global-startup-text">Initializing application...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (initError) {
     return (
@@ -286,7 +297,7 @@ function AppShellInner() {
               if (sess) {
                 await initSessions();
                 setActiveSessionId(sess.id);
-                switchSessionWorkspace(sess.id, false, null, 'M3');
+                switchSessionWorkspace(sess.id, false, null, 'M1');
                 const mode = sess.mode === 'challenge' ? 'CHALLENGE' : 'NORMAL';
                 const challengeRules = sess.challengeStatus ? {
                   maxDailyLossPercent: sess.initialBalance > 0 ? (sess.challengeStatus.dailyLossLimit / sess.initialBalance) * 100 : 5,
@@ -447,6 +458,16 @@ function AppShellInner() {
         isOpen={isIndicatorModalOpen}
         onClose={() => setIsIndicatorModalOpen(false)}
       />
+
+      {isCopilotVisible && (
+        <MiniAiCopilotBar
+          activeSession={activeSession}
+          onClose={() => {
+            setIsCopilotVisible(false);
+            localStorage.setItem('tradepro_copilot_visible', 'false');
+          }}
+        />
+      )}
     </ReplayProvider>
   );
 }

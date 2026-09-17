@@ -1,5 +1,5 @@
 import { useState, useEffect, memo } from 'react';
-import { Settings, Moon, Sun, BarChart2, LayoutTemplate, TrendingUp, RefreshCw, ChevronDown, Plus } from 'lucide-react';
+import { Settings, Moon, Sun, BarChart2, LayoutTemplate, TrendingUp, RefreshCw, ChevronDown, Plus, Sparkles } from 'lucide-react';
 import { TimezoneSelector } from '@features/timezone';
 import { useWorkspace } from '@features/workspace';
 import { useTheme, THEME_PRESETS, DEFAULT_THEME, type ThemeObject } from '@features/appearance';
@@ -438,6 +438,17 @@ function TopBar({
             <BarChart2 size={16} />
           </button>
         )}
+
+        {/* AI Copilot Toggle */}
+        <button
+          className="topbar__icon-only"
+          aria-label="AI Live Risk Guardian"
+          onClick={() => window.dispatchEvent(new CustomEvent('toggle-copilot-visibility'))}
+          title="Tampilkan / Sembunyikan AI Copilot Live Guardian"
+          style={{ color: '#38bdf8' }}
+        >
+          <Sparkles size={16} />
+        </button>
 
         {/* Workspace Sync Settings */}
         <div

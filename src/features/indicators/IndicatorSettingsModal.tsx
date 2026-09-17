@@ -16,6 +16,184 @@ import type {
 } from './types';
 import './IndicatorSettingsModal.css';
 
+interface VisibilityRangeRowProps {
+  label: string;
+  enabled: boolean;
+  onToggleEnabled: (enabled: boolean) => void;
+  min: number;
+  max: number;
+  limitMin: number;
+  limitMax: number;
+  onChangeRange: (min: number, max: number) => void;
+}
+
+const VisibilityRangeRow: React.FC<VisibilityRangeRowProps> = ({
+  label,
+  enabled,
+  onToggleEnabled,
+  min,
+  max,
+  limitMin,
+  limitMax,
+  onChangeRange,
+}) => {
+  const [minVal, setMinVal] = useState<string>(String(min));
+  const [maxVal, setMaxVal] = useState<string>(String(max));
+
+  useEffect(() => {
+    setMinVal(String(min));
+  }, [min]);
+
+  useEffect(() => {
+    setMaxVal(String(max));
+  }, [max]);
+
+  const commitMin = (raw: string) => {
+    let num = parseInt(raw, 10);
+    if (isNaN(num)) num = limitMin;
+    num = Math.max(limitMin, Math.min(num, max));
+    setMinVal(String(num));
+    onChangeRange(num, max);
+  };
+
+  const commitMax = (raw: string) => {
+    let num = parseInt(raw, 10);
+    if (isNaN(num)) num = limitMax;
+    num = Math.min(limitMax, Math.max(num, min));
+    setMaxVal(String(num));
+    onChangeRange(min, num);
+  };
+
+  const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!enabled) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (rect.width <= 14) return;
+    const clickX = e.clientX - rect.left;
+    const clampedX = Math.max(7, Math.min(rect.width - 7, clickX));
+    const ratio = (clampedX - 7) / (rect.width - 14);
+    const clickVal = Math.round(limitMin + ratio * (limitMax - limitMin));
+
+    const distMin = Math.abs(clickVal - min);
+    const distMax = Math.abs(clickVal - max);
+
+    if (clickVal < min) {
+      onChangeRange(clickVal, max);
+    } else if (clickVal > max) {
+      onChangeRange(min, clickVal);
+    } else {
+      if (distMin <= distMax) {
+        onChangeRange(clickVal, max);
+      } else {
+        onChangeRange(min, clickVal);
+      }
+    }
+  };
+
+  const totalRange = limitMax - limitMin;
+  const leftPct = totalRange > 0 ? (min - limitMin) / totalRange : 0;
+  const rightPct = totalRange > 0 ? (max - limitMin) / totalRange : 1;
+
+  return (
+    <div className={`tv-visibility-row ${!enabled ? 'is-disabled' : ''}`}>
+      <label className="tv-checkbox-container tv-vis-label">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => onToggleEnabled(e.target.checked)}
+        />
+        <span className="tv-checkbox-custom" />
+        <span className="tv-checkbox-text">{label}</span>
+      </label>
+
+      <input
+        type="number"
+        min={limitMin}
+        max={max}
+        value={minVal}
+        disabled={!enabled}
+        onChange={(e) => {
+          setMinVal(e.target.value);
+          const val = parseInt(e.target.value, 10);
+          if (!isNaN(val) && val >= limitMin && val <= max) {
+            onChangeRange(val, max);
+          }
+        }}
+        onBlur={(e) => commitMin(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            commitMin((e.target as HTMLInputElement).value);
+          }
+        }}
+        className="tv-vis-num-input"
+      />
+
+      <div
+        className={`tv-vis-slider-wrapper ${!enabled ? 'is-disabled' : ''}`}
+        onPointerDown={handleTrackPointerDown}
+      >
+        <div className="tv-vis-slider-track" />
+        <div
+          className="tv-vis-slider-fill"
+          style={{
+            left: `calc(7px + (100% - 14px) * ${leftPct})`,
+            width: `calc((100% - 14px) * ${Math.max(0, rightPct - leftPct)})`,
+          }}
+        />
+        <input
+          type="range"
+          min={limitMin}
+          max={limitMax}
+          value={min}
+          disabled={!enabled}
+          onChange={(e) => {
+            const val = Number(e.target.value);
+            const newMin = Math.min(val, max);
+            onChangeRange(newMin, max);
+          }}
+          className="tv-vis-range-thumb tv-vis-range-thumb-left"
+          style={{ zIndex: min > limitMax - totalRange * 0.15 ? 5 : 3 }}
+        />
+        <input
+          type="range"
+          min={limitMin}
+          max={limitMax}
+          value={max}
+          disabled={!enabled}
+          onChange={(e) => {
+            const val = Number(e.target.value);
+            const newMax = Math.max(val, min);
+            onChangeRange(min, newMax);
+          }}
+          className="tv-vis-range-thumb tv-vis-range-thumb-right"
+          style={{ zIndex: 4 }}
+        />
+      </div>
+
+      <input
+        type="number"
+        min={min}
+        max={limitMax}
+        value={maxVal}
+        disabled={!enabled}
+        onChange={(e) => {
+          setMaxVal(e.target.value);
+          const val = parseInt(e.target.value, 10);
+          if (!isNaN(val) && val >= min && val <= limitMax) {
+            onChangeRange(min, val);
+          }
+        }}
+        onBlur={(e) => commitMax(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            commitMax((e.target as HTMLInputElement).value);
+          }
+        }}
+        className="tv-vis-num-input"
+      />
+    </div>
+  );
+};
+
 export interface IndicatorSettingsModalProps {
   isOpen: boolean;
   indicatorId: string | null;
@@ -85,24 +263,133 @@ export const IndicatorSettingsModal: React.FC<IndicatorSettingsModalProps> = ({
   const [emas, setEmas] = useState<EmaLineItem[]>([]);
 
   // Timeframe visibility fields
+  const [visTicks, setVisTicks] = useState<boolean>(true);
   const [visSeconds, setVisSeconds] = useState<boolean>(true);
+  const [secMin, setSecMin] = useState<number>(1);
+  const [secMax, setSecMax] = useState<number>(59);
   const [visMinutes, setVisMinutes] = useState<boolean>(true);
+  const [minMin, setMinMin] = useState<number>(1);
+  const [minMax, setMinMax] = useState<number>(59);
   const [visHours, setVisHours] = useState<boolean>(true);
+  const [hourMin, setHourMin] = useState<number>(1);
+  const [hourMax, setHourMax] = useState<number>(24);
   const [visDays, setVisDays] = useState<boolean>(true);
+  const [dayMin, setDayMin] = useState<number>(1);
+  const [dayMax, setDayMax] = useState<number>(366);
   const [visWeeks, setVisWeeks] = useState<boolean>(true);
+  const [weekMin, setWeekMin] = useState<number>(1);
+  const [weekMax, setWeekMax] = useState<number>(52);
   const [visMonths, setVisMonths] = useState<boolean>(true);
+  const [monthMin, setMonthMin] = useState<number>(1);
+  const [monthMax, setMonthMax] = useState<number>(12);
+  const [visRanges, setVisRanges] = useState<boolean>(true);
 
   // Sync state when indicator opens
   useEffect(() => {
     if (!indicator) return;
 
     setColor(indicator.color);
-    setVisSeconds(indicator.visibility?.seconds ?? true);
-    setVisMinutes(indicator.visibility?.minutes ?? true);
-    setVisHours(indicator.visibility?.hours ?? true);
-    setVisDays(indicator.visibility?.days ?? true);
-    setVisWeeks(indicator.visibility?.weeks ?? true);
-    setVisMonths(indicator.visibility?.months ?? true);
+    const v = indicator.visibility;
+
+    if (typeof v?.ticks === 'boolean') {
+      setVisTicks(v.ticks);
+    } else if (typeof v?.ticks === 'object' && v?.ticks !== null) {
+      setVisTicks(v.ticks.enabled ?? true);
+    } else {
+      setVisTicks(true);
+    }
+
+    if (typeof v?.seconds === 'boolean') {
+      setVisSeconds(v.seconds);
+      setSecMin(1);
+      setSecMax(59);
+    } else if (typeof v?.seconds === 'object' && v?.seconds !== null) {
+      setVisSeconds(v.seconds.enabled ?? true);
+      setSecMin(v.seconds.min ?? 1);
+      setSecMax(v.seconds.max ?? 59);
+    } else {
+      setVisSeconds(true);
+      setSecMin(1);
+      setSecMax(59);
+    }
+
+    if (typeof v?.minutes === 'boolean') {
+      setVisMinutes(v.minutes);
+      setMinMin(1);
+      setMinMax(59);
+    } else if (typeof v?.minutes === 'object' && v?.minutes !== null) {
+      setVisMinutes(v.minutes.enabled ?? true);
+      setMinMin(v.minutes.min ?? 1);
+      setMinMax(v.minutes.max ?? 59);
+    } else {
+      setVisMinutes(true);
+      setMinMin(1);
+      setMinMax(59);
+    }
+
+    if (typeof v?.hours === 'boolean') {
+      setVisHours(v.hours);
+      setHourMin(1);
+      setHourMax(24);
+    } else if (typeof v?.hours === 'object' && v?.hours !== null) {
+      setVisHours(v.hours.enabled ?? true);
+      setHourMin(v.hours.min ?? 1);
+      setHourMax(v.hours.max ?? 24);
+    } else {
+      setVisHours(true);
+      setHourMin(1);
+      setHourMax(24);
+    }
+
+    if (typeof v?.days === 'boolean') {
+      setVisDays(v.days);
+      setDayMin(1);
+      setDayMax(366);
+    } else if (typeof v?.days === 'object' && v?.days !== null) {
+      setVisDays(v.days.enabled ?? true);
+      setDayMin(v.days.min ?? 1);
+      setDayMax(v.days.max ?? 366);
+    } else {
+      setVisDays(true);
+      setDayMin(1);
+      setDayMax(366);
+    }
+
+    if (typeof v?.weeks === 'boolean') {
+      setVisWeeks(v.weeks);
+      setWeekMin(1);
+      setWeekMax(52);
+    } else if (typeof v?.weeks === 'object' && v?.weeks !== null) {
+      setVisWeeks(v.weeks.enabled ?? true);
+      setWeekMin(v.weeks.min ?? 1);
+      setWeekMax(v.weeks.max ?? 52);
+    } else {
+      setVisWeeks(true);
+      setWeekMin(1);
+      setWeekMax(52);
+    }
+
+    if (typeof v?.months === 'boolean') {
+      setVisMonths(v.months);
+      setMonthMin(1);
+      setMonthMax(12);
+    } else if (typeof v?.months === 'object' && v?.months !== null) {
+      setVisMonths(v.months.enabled ?? true);
+      setMonthMin(v.months.min ?? 1);
+      setMonthMax(v.months.max ?? 12);
+    } else {
+      setVisMonths(true);
+      setMonthMin(1);
+      setMonthMax(12);
+    }
+
+    if (typeof v?.ranges === 'boolean') {
+      setVisRanges(v.ranges);
+    } else if (typeof v?.ranges === 'object' && v?.ranges !== null) {
+      setVisRanges(v.ranges.enabled ?? true);
+    } else {
+      setVisRanges(true);
+    }
 
     if (indicator.type === 'RSI') {
       const rsi = indicator as RsiIndicatorConfig;
@@ -229,12 +516,14 @@ export const IndicatorSettingsModal: React.FC<IndicatorSettingsModalProps> = ({
     const updates: Partial<IndicatorConfig> = {
       color,
       visibility: {
-        seconds: visSeconds,
-        minutes: visMinutes,
-        hours: visHours,
-        days: visDays,
-        weeks: visWeeks,
-        months: visMonths,
+        ticks: { enabled: visTicks },
+        seconds: { enabled: visSeconds, min: secMin, max: secMax },
+        minutes: { enabled: visMinutes, min: minMin, max: minMax },
+        hours: { enabled: visHours, min: hourMin, max: hourMax },
+        days: { enabled: visDays, min: dayMin, max: dayMax },
+        weeks: { enabled: visWeeks, min: weekMin, max: weekMax },
+        months: { enabled: visMonths, min: monthMin, max: monthMax },
+        ranges: { enabled: visRanges },
       },
     };
 
@@ -366,6 +655,26 @@ export const IndicatorSettingsModal: React.FC<IndicatorSettingsModalProps> = ({
         { id: 'ema_5', name: 'EMA 5', enabled: false, period: 9, source: 'close', color: '#8b5cf6', lineWidth: 1, lineStyle: 'solid' },
       ]);
     }
+    setVisTicks(true);
+    setVisSeconds(true);
+    setSecMin(1);
+    setSecMax(59);
+    setVisMinutes(true);
+    setMinMin(1);
+    setMinMax(59);
+    setVisHours(true);
+    setHourMin(1);
+    setHourMax(24);
+    setVisDays(true);
+    setDayMin(1);
+    setDayMax(366);
+    setVisWeeks(true);
+    setWeekMin(1);
+    setWeekMax(52);
+    setVisMonths(true);
+    setMonthMin(1);
+    setMonthMax(12);
+    setVisRanges(true);
     setShowDefaultMenu(false);
   };
 
@@ -1491,72 +1800,120 @@ export const IndicatorSettingsModal: React.FC<IndicatorSettingsModalProps> = ({
           )}
 
           {activeTab === 'visibilitas' && (
-            <div className="tv-tab-pane">
-              <div className="tv-section-label">VISIBILITAS KERANGKA WAKTU</div>
-              <div className="tv-checkbox-row">
-                <label className="tv-checkbox-container">
+            <div className="tv-tab-pane tv-visibility-pane">
+              {/* Tick */}
+              <div className="tv-visibility-row">
+                <label className="tv-checkbox-container tv-vis-label-full">
                   <input
                     type="checkbox"
-                    checked={visSeconds}
-                    onChange={(e) => setVisSeconds(e.target.checked)}
+                    checked={visTicks}
+                    onChange={(e) => setVisTicks(e.target.checked)}
                   />
                   <span className="tv-checkbox-custom" />
-                  <span className="tv-checkbox-text">Detik</span>
+                  <span className="tv-checkbox-text">Tick</span>
                 </label>
               </div>
-              <div className="tv-checkbox-row">
-                <label className="tv-checkbox-container">
+
+              {/* Detik */}
+              <VisibilityRangeRow
+                label="Detik"
+                enabled={visSeconds}
+                onToggleEnabled={setVisSeconds}
+                min={secMin}
+                max={secMax}
+                limitMin={1}
+                limitMax={59}
+                onChangeRange={(min, max) => {
+                  setSecMin(min);
+                  setSecMax(max);
+                }}
+              />
+
+              {/* Menit */}
+              <VisibilityRangeRow
+                label="Menit"
+                enabled={visMinutes}
+                onToggleEnabled={setVisMinutes}
+                min={minMin}
+                max={minMax}
+                limitMin={1}
+                limitMax={59}
+                onChangeRange={(min, max) => {
+                  setMinMin(min);
+                  setMinMax(max);
+                }}
+              />
+
+              {/* Jam */}
+              <VisibilityRangeRow
+                label="Jam"
+                enabled={visHours}
+                onToggleEnabled={setVisHours}
+                min={hourMin}
+                max={hourMax}
+                limitMin={1}
+                limitMax={24}
+                onChangeRange={(min, max) => {
+                  setHourMin(min);
+                  setHourMax(max);
+                }}
+              />
+
+              {/* Hari */}
+              <VisibilityRangeRow
+                label="Hari"
+                enabled={visDays}
+                onToggleEnabled={setVisDays}
+                min={dayMin}
+                max={dayMax}
+                limitMin={1}
+                limitMax={366}
+                onChangeRange={(min, max) => {
+                  setDayMin(min);
+                  setDayMax(max);
+                }}
+              />
+
+              {/* Minggu */}
+              <VisibilityRangeRow
+                label="Minggu"
+                enabled={visWeeks}
+                onToggleEnabled={setVisWeeks}
+                min={weekMin}
+                max={weekMax}
+                limitMin={1}
+                limitMax={52}
+                onChangeRange={(min, max) => {
+                  setWeekMin(min);
+                  setWeekMax(max);
+                }}
+              />
+
+              {/* Bulan */}
+              <VisibilityRangeRow
+                label="Bulan"
+                enabled={visMonths}
+                onToggleEnabled={setVisMonths}
+                min={monthMin}
+                max={monthMax}
+                limitMin={1}
+                limitMax={12}
+                onChangeRange={(min, max) => {
+                  setMonthMin(min);
+                  setMonthMax(max);
+                }}
+              />
+
+              {/* Ranges */}
+              <div className="tv-visibility-row">
+                <label className="tv-checkbox-container tv-vis-label-full">
                   <input
                     type="checkbox"
-                    checked={visMinutes}
-                    onChange={(e) => setVisMinutes(e.target.checked)}
+                    checked={visRanges}
+                    onChange={(e) => setVisRanges(e.target.checked)}
                   />
                   <span className="tv-checkbox-custom" />
-                  <span className="tv-checkbox-text">Menit</span>
-                </label>
-              </div>
-              <div className="tv-checkbox-row">
-                <label className="tv-checkbox-container">
-                  <input
-                    type="checkbox"
-                    checked={visHours}
-                    onChange={(e) => setVisHours(e.target.checked)}
-                  />
-                  <span className="tv-checkbox-custom" />
-                  <span className="tv-checkbox-text">Jam</span>
-                </label>
-              </div>
-              <div className="tv-checkbox-row">
-                <label className="tv-checkbox-container">
-                  <input
-                    type="checkbox"
-                    checked={visDays}
-                    onChange={(e) => setVisDays(e.target.checked)}
-                  />
-                  <span className="tv-checkbox-custom" />
-                  <span className="tv-checkbox-text">Hari</span>
-                </label>
-              </div>
-              <div className="tv-checkbox-row">
-                <label className="tv-checkbox-container">
-                  <input
-                    type="checkbox"
-                    checked={visWeeks}
-                    onChange={(e) => setVisWeeks(e.target.checked)}
-                  />
-                  <span className="tv-checkbox-custom" />
-                  <span className="tv-checkbox-text">Minggu</span>
-                </label>
-              </div>
-              <div className="tv-checkbox-row">
-                <label className="tv-checkbox-container">
-                  <input
-                    type="checkbox"
-                    checked={visMonths}
-                    onChange={(e) => setVisMonths(e.target.checked)}
-                  />
-                  <span className="tv-checkbox-custom" />
-                  <span className="tv-checkbox-text">Bulan</span>
+                  <span className="tv-checkbox-text">Ranges</span>
                 </label>
               </div>
             </div>

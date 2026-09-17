@@ -6,13 +6,123 @@ import { timeframeToSeconds } from '@/utils/dataResampler';
 
 export type IndicatorType = 'EMA' | 'RSI' | 'SESSIONS' | 'KILLZONES' | 'MACROS' | 'SESSION_OPENS' | 'QUARTERS';
 
+export interface VisibilityRange {
+  enabled: boolean;
+  min: number;
+  max: number;
+}
+
+export interface VisibilityToggle {
+  enabled: boolean;
+}
+
 export interface IndicatorVisibility {
-  seconds?: boolean;
-  minutes?: boolean;
-  hours?: boolean;
-  days?: boolean;
-  weeks?: boolean;
-  months?: boolean;
+  ticks?: boolean | VisibilityToggle;
+  seconds?: boolean | VisibilityRange;
+  minutes?: boolean | VisibilityRange;
+  hours?: boolean | VisibilityRange;
+  days?: boolean | VisibilityRange;
+  weeks?: boolean | VisibilityRange;
+  months?: boolean | VisibilityRange;
+  ranges?: boolean | VisibilityToggle;
+}
+
+export type TimeframeUnit = 'ticks' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'ranges';
+
+export interface ParsedTimeframe {
+  unit: TimeframeUnit;
+  value: number;
+}
+
+export function parseTimeframeUnitAndValue(timeframe: string): ParsedTimeframe {
+  const norm = String(timeframe).trim().toUpperCase();
+
+  // 1. Ticks
+  if (norm === 'T' || norm.startsWith('TICK') || (norm.endsWith('T') && /^\d+T$/.test(norm))) {
+    const digits = norm.replace(/\D/g, '');
+    return { unit: 'ticks', value: digits ? parseInt(digits, 10) : 1 };
+  }
+
+  // 2. Ranges
+  if (norm === 'R' || norm.startsWith('RANGE') || (norm.endsWith('R') && /^\d+R$/.test(norm))) {
+    const digits = norm.replace(/\D/g, '');
+    return { unit: 'ranges', value: digits ? parseInt(digits, 10) : 1 };
+  }
+
+  // 3. Seconds (S1, 1S, S30, 30S, etc.)
+  if (norm.startsWith('S') && /^[S]\d+$/.test(norm)) {
+    return { unit: 'seconds', value: parseInt(norm.slice(1), 10) || 1 };
+  }
+  if (norm.endsWith('S') && /^\d+S$/.test(norm)) {
+    return { unit: 'seconds', value: parseInt(norm.slice(0, -1), 10) || 1 };
+  }
+
+  // 4. Months (MN, MN1, 1MN, MONTH, MONTHLY)
+  if (norm.startsWith('MN') || norm.startsWith('MONTH') || (norm === 'M' && timeframeToSeconds(norm) >= 2592000)) {
+    const digits = norm.replace(/\D/g, '');
+    return { unit: 'months', value: digits ? parseInt(digits, 10) : 1 };
+  }
+  if (norm.endsWith('MN')) {
+    const digits = norm.slice(0, -2);
+    return { unit: 'months', value: digits ? parseInt(digits, 10) : 1 };
+  }
+
+  // 5. Minutes (M1, 1M, M15, 15M, etc. - except MN/MONTH)
+  if (norm.startsWith('M') && !norm.startsWith('MN') && !norm.startsWith('MONTH') && /^[M]\d+$/.test(norm)) {
+    return { unit: 'minutes', value: parseInt(norm.slice(1), 10) || 1 };
+  }
+  if (norm.endsWith('M') && !norm.endsWith('MN') && /^\d+M$/.test(norm)) {
+    return { unit: 'minutes', value: parseInt(norm.slice(0, -1), 10) || 1 };
+  }
+
+  // 6. Hours (H1, 1H, H4, 4H, etc.)
+  if (norm.startsWith('H') && /^[H]\d+$/.test(norm)) {
+    return { unit: 'hours', value: parseInt(norm.slice(1), 10) || 1 };
+  }
+  if (norm.endsWith('H') && /^\d+H$/.test(norm)) {
+    return { unit: 'hours', value: parseInt(norm.slice(0, -1), 10) || 1 };
+  }
+
+  // 7. Days (D, D1, 1D, etc.)
+  if (norm === 'D') {
+    return { unit: 'days', value: 1 };
+  }
+  if (norm.startsWith('D') && /^[D]\d+$/.test(norm)) {
+    return { unit: 'days', value: parseInt(norm.slice(1), 10) || 1 };
+  }
+  if (norm.endsWith('D') && /^\d+D$/.test(norm)) {
+    return { unit: 'days', value: parseInt(norm.slice(0, -1), 10) || 1 };
+  }
+
+  // 8. Weeks (W, W1, 1W, etc.)
+  if (norm === 'W') {
+    return { unit: 'weeks', value: 1 };
+  }
+  if (norm.startsWith('W') && /^[W]\d+$/.test(norm)) {
+    return { unit: 'weeks', value: parseInt(norm.slice(1), 10) || 1 };
+  }
+  if (norm.endsWith('W') && /^\d+W$/.test(norm)) {
+    return { unit: 'weeks', value: parseInt(norm.slice(0, -1), 10) || 1 };
+  }
+
+  // Fallback: derive from timeframeToSeconds
+  const sec = timeframeToSeconds(norm);
+  if (sec < 60) {
+    return { unit: 'seconds', value: Math.max(1, Math.round(sec)) };
+  }
+  if (sec < 3600) {
+    return { unit: 'minutes', value: Math.max(1, Math.round(sec / 60)) };
+  }
+  if (sec < 86400) {
+    return { unit: 'hours', value: Math.max(1, Math.round(sec / 3600)) };
+  }
+  if (sec < 604800) {
+    return { unit: 'days', value: Math.max(1, Math.round(sec / 86400)) };
+  }
+  if (sec < 2592000) {
+    return { unit: 'weeks', value: Math.max(1, Math.round(sec / 604800)) };
+  }
+  return { unit: 'months', value: Math.max(1, Math.round(sec / 2592000)) };
 }
 
 export function isIndicatorVisibleOnTimeframe(
@@ -20,23 +130,24 @@ export function isIndicatorVisibleOnTimeframe(
   timeframe: string | undefined
 ): boolean {
   if (!visibility || !timeframe) return true;
-  const sec = timeframeToSeconds(timeframe);
-  if (sec < 60) {
-    return visibility.seconds !== false;
+  const parsed = parseTimeframeUnitAndValue(timeframe);
+  const cfg = visibility[parsed.unit];
+
+  if (cfg === undefined) return true;
+
+  if (typeof cfg === 'boolean') {
+    return cfg;
   }
-  if (sec < 3600) {
-    return visibility.minutes !== false;
+
+  if (typeof cfg === 'object' && cfg !== null) {
+    if (cfg.enabled === false) return false;
+    const r = cfg as VisibilityRange;
+    if (typeof r.min === 'number' && parsed.value < r.min) return false;
+    if (typeof r.max === 'number' && parsed.value > r.max) return false;
+    return true;
   }
-  if (sec < 86400) {
-    return visibility.hours !== false;
-  }
-  if (sec < 604800) {
-    return visibility.days !== false;
-  }
-  if (sec < 2592000) {
-    return visibility.weeks !== false;
-  }
-  return visibility.months !== false;
+
+  return true;
 }
 
 export interface BaseIndicatorConfig {

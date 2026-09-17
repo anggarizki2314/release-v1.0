@@ -196,12 +196,29 @@ export default function DrawingCanvas({
   useEffect(() => {
     const controller = controllerRef.current;
     if (!controller) return;
-    const handler = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') controller.handleKeyDown(e.key, e.ctrlKey, e.metaKey);
+      if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+        if (e.key === 'Shift') {
+          controller.handleShiftState(true);
+        }
+        controller.handleKeyDown(e.key, e.ctrlKey, e.metaKey);
+      }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+        if (e.key === 'Shift') {
+          controller.handleShiftState(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, []);
 
   useEffect(() => {
@@ -269,12 +286,88 @@ export default function DrawingCanvas({
     }
   }, [effectiveStorageKey]);
 
+  const lastCrosshairTargetRef = useRef<HTMLCanvasElement | null>(null);
+
+  const forwardCrosshairMove = useCallback((clientX: number, clientY: number) => {
+    if (!chart || typeof chart.chartElement !== 'function') return;
+    const chartEl = chart.chartElement();
+    if (!chartEl) return;
+
+    const canvases = Array.from(chartEl.querySelectorAll('canvas'));
+    if (canvases.length === 0) return;
+
+    // Find the chart's top interactive canvas (LWC sets style.zIndex = '2' on topCanvasBinding)
+    const targetCanvas =
+      canvases.find((c) => {
+        const rect = c.getBoundingClientRect();
+        return (
+          (c.style.zIndex === '2' || c.style.zIndex === '') &&
+          clientX >= rect.left &&
+          clientX <= rect.right &&
+          clientY >= rect.top &&
+          clientY <= rect.bottom
+        );
+      }) ||
+      canvases.find((c) => {
+        const rect = c.getBoundingClientRect();
+        return (
+          clientX >= rect.left &&
+          clientX <= rect.right &&
+          clientY >= rect.top &&
+          clientY <= rect.bottom
+        );
+      }) ||
+      canvases[canvases.length - 1];
+
+    if (!targetCanvas) return;
+
+    if (lastCrosshairTargetRef.current !== targetCanvas) {
+      if (lastCrosshairTargetRef.current) {
+        lastCrosshairTargetRef.current.dispatchEvent(
+          new MouseEvent('mouseleave', { clientX, clientY, bubbles: false, cancelable: true })
+        );
+      }
+      targetCanvas.dispatchEvent(
+        new MouseEvent('mouseenter', { clientX, clientY, bubbles: false, cancelable: true })
+      );
+      lastCrosshairTargetRef.current = targetCanvas;
+    }
+
+    targetCanvas.dispatchEvent(
+      new MouseEvent('mousemove', {
+        clientX,
+        clientY,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+  }, [chart]);
+
+  const handleDrawingPointerLeave = useCallback(() => {
+    if (lastCrosshairTargetRef.current) {
+      lastCrosshairTargetRef.current.dispatchEvent(
+        new MouseEvent('mouseleave', { bubbles: false, cancelable: true })
+      );
+      lastCrosshairTargetRef.current = null;
+    }
+  }, []);
+
   const handleDrawingPointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button !== 0) return;
     controllerRef.current?.handlePointerDown(e.clientX, e.clientY, e.ctrlKey || e.metaKey, e.shiftKey);
-  }, []);
-  const handleDrawingPointerMove = useCallback((e: React.PointerEvent) => controllerRef.current?.handlePointerMove(e.clientX, e.clientY, e.shiftKey), []);
-  const handleDrawingPointerUp = useCallback(() => controllerRef.current?.handlePointerUp(), []);
+    forwardCrosshairMove(e.clientX, e.clientY);
+  }, [forwardCrosshairMove]);
+
+  const handleDrawingPointerMove = useCallback((e: React.PointerEvent) => {
+    controllerRef.current?.handlePointerMove(e.clientX, e.clientY, e.shiftKey);
+    forwardCrosshairMove(e.clientX, e.clientY);
+  }, [forwardCrosshairMove]);
+
+  const handleDrawingPointerUp = useCallback((e: React.PointerEvent) => {
+    controllerRef.current?.handlePointerUp();
+    forwardCrosshairMove(e.clientX, e.clientY);
+  }, [forwardCrosshairMove]);
+
   const handleStyleChange = useCallback((id: string, changes: Partial<DrawingStyle>, text?: string) => {
     engineRef.current?.updateDrawing(id, {
       style: changes,
@@ -299,10 +392,27 @@ export default function DrawingCanvas({
   const selectedDrawing = floatingToolbar.drawingId ? engineRef.current?.drawings.get(floatingToolbar.drawingId) ?? null : null;
   const isDrawingMode = activeTool !== 'pointer' && activeTool !== 'crosshair';
 
+  useEffect(() => {
+    if (!isDrawingMode && lastCrosshairTargetRef.current) {
+      lastCrosshairTargetRef.current.dispatchEvent(
+        new MouseEvent('mouseleave', { bubbles: false, cancelable: true })
+      );
+      lastCrosshairTargetRef.current = null;
+    }
+  }, [isDrawingMode]);
+
   return <>
     <canvas ref={canvasRef} className="drawing-canvas drawing-layer-canvas" style={{ pointerEvents: 'none' }} />
     <canvas ref={axisCanvasRef} className="axis-overlay-canvas" style={{ pointerEvents: 'none' }} />
-    {isDrawingMode && <div className="drawing-capture-layer" onPointerDown={handleDrawingPointerDown} onPointerMove={handleDrawingPointerMove} onPointerUp={handleDrawingPointerUp} />}
+    {isDrawingMode && (
+      <div
+        className="drawing-capture-layer"
+        onPointerDown={handleDrawingPointerDown}
+        onPointerMove={handleDrawingPointerMove}
+        onPointerUp={handleDrawingPointerUp}
+        onPointerLeave={handleDrawingPointerLeave}
+      />
+    )}
     {floatingToolbar.visible && selectedDrawing && (
       <FloatingDrawingToolbar
         x={floatingToolbar.x}

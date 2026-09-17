@@ -192,6 +192,23 @@ export class TradingStore implements ITradingStoreActions {
     }
   }
 
+  public removeHistory(tradeId: string): HistoryState | undefined {
+    const idx = this.schema.history.findIndex((h) => h.tradeId === tradeId);
+    if (idx >= 0) {
+      const [removed] = this.schema.history.splice(idx, 1);
+      this.emit('HistoryRemoved', { tradeId, trade: removed });
+      return removed;
+    }
+    return undefined;
+  }
+
+  public clearHistory(): ReadonlyArray<HistoryState> {
+    const removed = [...this.schema.history];
+    this.schema.history = [];
+    this.emit('HistoryCleared', { count: removed.length });
+    return removed;
+  }
+
   public updateAccount(accountUpdates: Partial<AccountState>): void {
     this.schema.account = { ...this.schema.account, ...accountUpdates };
     this.emit('AccountUpdated', { account: { ...this.schema.account } });

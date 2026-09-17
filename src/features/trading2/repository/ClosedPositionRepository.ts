@@ -159,6 +159,17 @@ export class ClosedPositionRepository {
   }
 
   /**
+   * Removes a closed position by its position ID.
+   */
+  public removeClosedPosition(positionId: string): void {
+    const idx = this.closedPositions.findIndex((p) => p.positionId === positionId);
+    if (idx >= 0) {
+      this.closedPositions.splice(idx, 1);
+      this.notifyListeners();
+    }
+  }
+
+  /**
    * Clears all recorded closed positions.
    */
   public clear(): void {

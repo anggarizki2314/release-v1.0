@@ -8,7 +8,7 @@
 
 import type { IChartApi, ISeriesApi } from 'lightweight-charts';
 import type { CoordinateSystem } from './types';
-import { getXFromLogical, getLogicalFromX, priceFromY } from '../utils/coordinateEngine';
+import { timeToCoordinateSafe, coordinateToTimeSafe, priceFromY } from '../utils/coordinateEngine';
 
 export class ChartInteractionBridge {
   private chart: IChartApi | null = null;
@@ -83,77 +83,21 @@ export class ChartInteractionBridge {
 
     return {
       screenToChart: (clientX: number, clientY: number) => this.screenToChart(clientX, clientY),
-      timeToX: (t: number) => {
-        if (!Number.isFinite(t) || t < 0) return 0;
-        const p = timeScale?.timeToCoordinate(t as any);
-        if (p !== null && p !== undefined && Number.isFinite(p as number)) return p as number;
-
-        const candles = this.candles;
-        const len = candles ? candles.length : 0;
-        if (len > 0) {
-          const lastCandle = candles[len - 1];
-          const lastTimeVal = typeof lastCandle.time === 'number' ? lastCandle.time : (new Date(lastCandle.time as any).getTime() / 1000);
-          const firstCandle = candles[0];
-          const firstTimeVal = typeof firstCandle.time === 'number' ? firstCandle.time : (new Date(firstCandle.time as any).getTime() / 1000);
-          const lastBarIndexVal = len - 1;
-          const barIntervalVal = len > 1
-            ? Math.max((lastTimeVal - firstTimeVal) / (len - 1), 1)
-            : 3600;
-
-          const targetLogical = lastBarIndexVal + (t - lastTimeVal) / barIntervalVal;
-          const projX = getXFromLogical(chart, targetLogical, len);
-          if (projX !== null && projX !== undefined && Number.isFinite(projX)) return projX;
-        }
-
-        // Fallback via visibleRange
-        if (timeScale) {
-          const visibleRange = timeScale.getVisibleLogicalRange();
-          if (visibleRange) {
-            const leftX = timeScale.logicalToCoordinate(visibleRange.from as any);
-            const rightX = timeScale.logicalToCoordinate(visibleRange.to as any);
-            if (leftX !== null && rightX !== null && (rightX as number) !== (leftX as number)) {
-              const currentBarSpacing = ((rightX as number) - (leftX as number)) / (visibleRange.to - visibleRange.from);
-              const nowSec = Date.now() / 1000;
-              const targetLogical = visibleRange.to + (t - nowSec) / 3600;
-              return (rightX as number) + (targetLogical - visibleRange.to) * currentBarSpacing;
-            }
-          }
-        }
-        return 0;
-      },
+      timeToX: (t: number) => timeToCoordinateSafe(chart, t, this.candles),
       priceToY: (p: number) => {
         if (!series || !chart || !Number.isFinite(p)) return 0;
-        const coord = series.priceToCoordinate(p);
-        if (coord !== null && coord !== undefined && Number.isFinite(coord)) return coord as number;
-        return priceFromY(chart, series, p);
-      },
-      xToTime: (x: number) => {
-        if (!timeScale || !chart) return NaN;
-
-        const candles = this.candles;
-        const len = candles ? candles.length : 0;
-        if (len > 0) {
-          const lastCandle = candles[len - 1];
-          const lastTimeVal = typeof lastCandle.time === 'number' ? lastCandle.time : (new Date(lastCandle.time as any).getTime() / 1000);
-          const firstCandle = candles[0];
-          const firstTimeVal = typeof firstCandle.time === 'number' ? firstCandle.time : (new Date(firstCandle.time as any).getTime() / 1000);
-          const lastBarIndexVal = len - 1;
-          const barIntervalVal = len > 1
-            ? Math.max((lastTimeVal - firstTimeVal) / (len - 1), 1)
-            : 3600;
-
-          // 1. Try native LWC time API for historical/visible candles
-          const t = timeScale.coordinateToTime(x as any);
-          if (t !== null && t !== undefined && typeof t === 'number' && Number.isFinite(t) && t > 0) {
-            return t;
+        try {
+          const coord = series.priceToCoordinate(p);
+          if (coord !== null && coord !== undefined && Number.isFinite(coord)) return coord as number;
+          const param = typeof series.priceScale === 'function' ? (series.priceScale() as any) : null;
+          if (param && typeof param.priceToCoordinate === 'function') {
+            const scaleCoord = param.priceToCoordinate(p);
+            if (scaleCoord !== null && scaleCoord !== undefined && Number.isFinite(scaleCoord)) return scaleCoord as number;
           }
-
-          // 2. Unbounded conversion for empty/future area using getLogicalFromX
-          const logical = getLogicalFromX(chart, x, len);
-          return Math.round(lastTimeVal + (logical - lastBarIndexVal) * barIntervalVal);
-        }
-        return NaN;
+        } catch {}
+        return 0;
       },
+      xToTime: (x: number) => coordinateToTimeSafe(chart, x, this.candles),
       yToPrice: (y: number) => {
         if (!series || !chart) return 0;
         return priceFromY(chart, series, y);
